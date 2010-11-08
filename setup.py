@@ -23,7 +23,9 @@ setup(name='plone.messaging.twisted',
       include_package_data=True,
       zip_safe=False,
       install_requires=[
-          'setuptools','twisted'
+          'setuptools',
+          'twisted',
+          'wokkel'
           # -*- Extra requirements: -*-
       ],
       entry_points="""

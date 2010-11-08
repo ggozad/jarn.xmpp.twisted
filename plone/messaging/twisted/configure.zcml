@@ -5,4 +5,11 @@
 
   <five:registerPackage package="." initialize=".initialize" />
 
+  <subscriber
+    for=".interfaces.ReactorStarted"
+    handler=".subscribers.reactorStart"
+    />
+
+  <utility factory=".reactor.ZopeReactor" />
+
 </configure>
