@@ -7,7 +7,7 @@
 
   <subscriber
     for=".interfaces.ReactorStarted"
-    handler=".subscribers.reactorStart"
+    handler=".subscribers.connectAdminAccount"
     />
 
   <utility factory=".reactor.ZopeReactor" />
