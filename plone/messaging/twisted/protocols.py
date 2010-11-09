@@ -5,8 +5,6 @@ The XMPP Service Administration protocol is documented in
 U{XEP-0133<http://xmpp.org/extensions/xep-0133.html>}.
 """
 
-from zope.interface import implements
-
 from twisted.words.protocols.jabber.error import StanzaError
 from twisted.words.protocols.jabber.xmlstream import IQ, toResponse
 
@@ -15,70 +13,53 @@ try:
 except ImportError:
     from wokkel.subprotocols import XMPPHandler
 
-from wokkel import disco, iwokkel
+from wokkel import data_form
 
 NS_COMMANDS = 'http://jabber.org/protocol/commands'
 NODE_ADMIN = 'http://jabber.org/protocol/admin'
+NODE_ADMIN_ANNOUNCE = NODE_ADMIN + '#announce'
 ADMIN_REQUEST = "/iq[@type='get' or @type='set']" \
                 "/command[@xmlns='%s' and @node='/%s']" % (NS_COMMANDS, NODE_ADMIN)
 
-class AdminClientProtocol(XMPPHandler):
+class AdminClient(XMPPHandler):
     """
     Admin client.
 
     This handler implements the protocol for sending out XMPP admin requests.
     """
 
-class AdminHandler(XMPPHandler):
-    """
-    Admin responder.
-
-    This handler executes XMPP admin commands.
-    """
-
-    implements(iwokkel.IDisco)
-
-    def connectionInitialized(self):
+    def sendAnnouncement(self, body, subject='Announce'):
+        """Send an announement to all users.        
         """
-        Called when the XML stream has been initialized.
 
-        This sets up an observer for incoming admin command requests.
-        """
-        self.xmlstream.addObserver(ADMIN_REQUEST, self.onAdminCommand)
+        def formReceived(iq):
+            command = iq.command
+            sessionid = command['sessionid']
+            form = data_form.findForm(command, NODE_ADMIN)
 
+            response = toResponse(iq, 'set')
+            #response = IQ(self.xmlstream, 'set')
+            #response['to'] = iq['from']
+            #response['id'] = iq['id']
+            command = response.addElement((NS_COMMANDS, "command"))
+            command['node'] = NODE_ADMIN_ANNOUNCE
+            command['sessionid'] = sessionid
 
-    def onAdminCommand(self, iq):
-        """
-        Called when an admin command request has been received.
+            form.formType = 'submit'
+            form.fields['subject'].value = subject
+            form.fields['body'].value = body
 
-        It does stuff.
-        """
-        response = toResponse(iq, 'result')
-        self.xmlstream.send(response)
-        iq.handled = True
+            command.addChild(form.toElement())
+            self.send(response)
+            #d = response.send()
+            #d.addCallback(resultReceived)
+            #return d
 
-
-    def getDiscoInfo(self, requestor, target, nodeIdentifier=''):
-        """
-        Get identity and features from this entity, node.
-
-        This handler supports XMPP Ping, but only without a nodeIdentifier
-        specified.
-        """
-        if not nodeIdentifier:
-            return [disco.DiscoFeature(NS_COMMANDS)]
-        else:
-            import pdb; pdb.set_trace( )
-            return []
-
-
-    def getDiscoItems(self, requestor, target, nodeIdentifier=''):
-        """
-        Get contained items for this entity, node.
-
-        This handler does not support items.
-        """
-        import pdb; pdb.set_trace( )
-        return []
-
-
+        iq = IQ(self.xmlstream, 'set')
+        iq['to'] = self.parent.jid.host
+        command = iq.addElement((NS_COMMANDS, 'command'))
+        command['action'] = 'execute'
+        command['node'] = NODE_ADMIN_ANNOUNCE
+        d = iq.send()
+        d.addCallback(formReceived)
+        return d
