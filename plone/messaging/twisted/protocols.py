@@ -1,12 +1,13 @@
 """
-XMPP Ping.
+XMPP Admin.
 
 The XMPP Service Administration protocol is documented in
 U{XEP-0133<http://xmpp.org/extensions/xep-0133.html>}.
 """
 
+import logging
 from twisted.words.protocols.jabber.error import StanzaError
-from twisted.words.protocols.jabber.xmlstream import IQ, toResponse
+from twisted.words.protocols.jabber.xmlstream import IQ
 
 try:
     from twisted.words.protocols.xmlstream import XMPPHandler
@@ -15,11 +16,16 @@ except ImportError:
 
 from wokkel import data_form
 
+
 NS_COMMANDS = 'http://jabber.org/protocol/commands'
 NODE_ADMIN = 'http://jabber.org/protocol/admin'
 NODE_ADMIN_ANNOUNCE = NODE_ADMIN + '#announce'
 ADMIN_REQUEST = "/iq[@type='get' or @type='set']" \
-                "/command[@xmlns='%s' and @node='/%s']" % (NS_COMMANDS, NODE_ADMIN)
+                "/command[@xmlns='%s' and @node='/%s']" % \
+                (NS_COMMANDS, NODE_ADMIN)
+
+logger = logging.getLogger('plone.messaging.twisted')
+
 
 class AdminClient(XMPPHandler):
     """
@@ -29,18 +35,23 @@ class AdminClient(XMPPHandler):
     """
 
     def sendAnnouncement(self, body, subject='Announce'):
-        """Send an announement to all users.        
+        """Send an announement to all users.
         """
+
+        def resultReceived(iq):
+            return True
 
         def formReceived(iq):
             command = iq.command
             sessionid = command['sessionid']
             form = data_form.findForm(command, NODE_ADMIN)
 
-            response = toResponse(iq, 'set')
-            #response = IQ(self.xmlstream, 'set')
-            #response['to'] = iq['from']
-            #response['id'] = iq['id']
+            #from twisted.words.protocols.jabber.xmlstream import toResponse
+            #response = toResponse(iq, 'set')
+            response = IQ(self.xmlstream, 'set')
+            response['to'] = iq['from']
+            response['id'] = iq['id']
+
             command = response.addElement((NS_COMMANDS, "command"))
             command['node'] = NODE_ADMIN_ANNOUNCE
             command['sessionid'] = sessionid
@@ -50,10 +61,13 @@ class AdminClient(XMPPHandler):
             form.fields['body'].value = body
 
             command.addChild(form.toElement())
-            self.send(response)
-            #d = response.send()
-            #d.addCallback(resultReceived)
-            #return d
+            d = response.send()
+            d.addCallbacks(resultReceived, error)
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return False
 
         iq = IQ(self.xmlstream, 'set')
         iq['to'] = self.parent.jid.host
@@ -61,5 +75,5 @@ class AdminClient(XMPPHandler):
         command['action'] = 'execute'
         command['node'] = NODE_ADMIN_ANNOUNCE
         d = iq.send()
-        d.addCallback(formReceived)
+        d.addCallbacks(formReceived, error)
         return d
