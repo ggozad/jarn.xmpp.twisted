@@ -5,11 +5,6 @@
 
   <five:registerPackage package="." initialize=".initialize" />
 
-  <subscriber
-    for=".interfaces.ReactorStarted"
-    handler=".subscribers.connectAdminAccount"
-    />
-
   <utility factory=".reactor.ZopeReactor" />
 
 </configure>
