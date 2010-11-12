@@ -19,7 +19,8 @@ class Admin(AdminClient):
     def connectionInitialized(self):
         logger.info("Admin user %s has logged in" % self.parent.jid.full())
         self.send(AvailablePresence(priority=-10))
-        self.addUser('asd','asd')
+        self.addUser('joe@localhost','secret')
+        self.deleteUsers('joe@localhost')
 
 
 class PubSub(PubSubClient):

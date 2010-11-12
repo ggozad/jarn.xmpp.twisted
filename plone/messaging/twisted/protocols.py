@@ -19,8 +19,10 @@ from wokkel import data_form
 
 NS_COMMANDS = 'http://jabber.org/protocol/commands'
 NODE_ADMIN = 'http://jabber.org/protocol/admin'
-NODE_ADMIN_ANNOUNCE = NODE_ADMIN + '#announce'
 NODE_ADMIN_ADD_USER = NODE_ADMIN + '#add-user'
+NODE_ADMIN_DELETE_USER = NODE_ADMIN + '#delete-user'
+NODE_ADMIN_ANNOUNCE = NODE_ADMIN + '#announce'
+
 ADMIN_REQUEST = "/iq[@type='get' or @type='set']" \
                 "/command[@xmlns='%s' and @node='/%s']" % \
                 (NS_COMMANDS, NODE_ADMIN)
@@ -34,6 +36,96 @@ class AdminClient(XMPPHandler):
 
     This handler implements the protocol for sending out XMPP admin requests.
     """
+
+    def addUser(self, userjid, password):
+        """Add a user.
+        """
+
+        def resultReceived(iq):
+            logger.info("%s: Added user %s" % \
+                        (self.parent.jid.full(), userjid))
+            return True
+
+        def formReceived(iq):
+            command = iq.command
+            sessionid = command['sessionid']
+            form = data_form.findForm(command, NODE_ADMIN)
+
+            response = IQ(self.xmlstream, 'set')
+            response['to'] = iq['from']
+            response['id'] = iq['id']
+
+            command = response.addElement((NS_COMMANDS, 'command'))
+            command['node'] = NODE_ADMIN_ADD_USER
+            command['sessionid'] = sessionid
+
+            form.formType = 'submit'
+            form.fields['accountjid'].value = userjid
+            form.fields['password'].value = password
+            form.fields['password-verify'].value = password
+
+            command.addChild(form.toElement())
+            d = response.send()
+            d.addCallbacks(resultReceived, error)
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return False
+
+        iq = IQ(self.xmlstream, 'set')
+        iq['to'] = self.parent.jid.host
+        command = iq.addElement((NS_COMMANDS, 'command'))
+        command['action'] = 'execute'
+        command['node'] = NODE_ADMIN_ADD_USER
+        d = iq.send()
+        d.addCallbacks(formReceived, error)
+        return d
+
+    def deleteUsers(self, userjids):
+        """Add a user.
+        """
+
+        def resultReceived(iq):
+            logger.info("%s: Deleted users %s" % \
+                        (self.parent.jid.full(), userjids))
+            return True
+
+        def formReceived(iq):
+            command = iq.command
+            sessionid = command['sessionid']
+            form = data_form.findForm(command, NODE_ADMIN)
+
+            response = IQ(self.xmlstream, 'set')
+            response['to'] = iq['from']
+            response['id'] = iq['id']
+
+            command = response.addElement((NS_COMMANDS, 'command'))
+            command['node'] = NODE_ADMIN_DELETE_USER
+            command['sessionid'] = sessionid
+
+            form.formType = 'submit'
+            form.fields['accountjids'].values = userjids
+
+            command.addChild(form.toElement())
+            d = response.send()
+            d.addCallbacks(resultReceived, error)
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return False
+
+        if isinstance(userjids, basestring):
+            userjids = [userjids]
+        iq = IQ(self.xmlstream, 'set')
+        iq['to'] = self.parent.jid.host
+        command = iq.addElement((NS_COMMANDS, 'command'))
+        command['action'] = 'execute'
+        command['node'] = NODE_ADMIN_DELETE_USER
+        d = iq.send()
+        d.addCallbacks(formReceived, error)
+        return d
 
     def sendAnnouncement(self, body, subject='Announce'):
         """Send an announement to all users.
@@ -77,47 +169,4 @@ class AdminClient(XMPPHandler):
         command['node'] = NODE_ADMIN_ANNOUNCE
         d = iq.send()
         d.addCallbacks(formReceived, error)
-        return d
-
-    def addUser(self, username, password):
-        """Add a user.
-        """
-        def resultReceived(iq):
-            return True
-
-        def formReceived(iq):
-            command = iq.command
-            sessionid = command['sessionid']
-            form = data_form.findForm(command, NODE_ADMIN)
-
-            response = IQ(self.xmlstream, 'set')
-            response['to'] = iq['from']
-            response['id'] = iq['id']
-
-            command = response.addElement((NS_COMMANDS, 'command'))
-            command['node'] = NODE_ADMIN_ADD_USER
-            command['sessionid'] = sessionid
-
-            form.formType = 'submit'
-            form.fields['accountjid'].value = username + '@' + self.parent.jid.host
-            form.fields['password'].value = password
-            form.fields['password-verify'].value = password
-
-            command.addChild(form.toElement())
-            d = response.send()
-            d.addCallbacks(resultReceived, error)
-
-        def error(failure):
-            # TODO: Handle gracefully?
-            logger.error(failure.getTraceback())
-            return False
-
-        iq = IQ(self.xmlstream, 'set')
-        iq['to'] = self.parent.jid.host
-        command = iq.addElement((NS_COMMANDS, 'command'))
-        command['action'] = 'execute'
-        command['node'] = NODE_ADMIN_ADD_USER
-        d = iq.send()
-        d.addCallbacks(formReceived, error)
-
         return d
