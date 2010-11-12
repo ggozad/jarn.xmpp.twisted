@@ -20,6 +20,7 @@ from wokkel import data_form
 NS_COMMANDS = 'http://jabber.org/protocol/commands'
 NODE_ADMIN = 'http://jabber.org/protocol/admin'
 NODE_ADMIN_ANNOUNCE = NODE_ADMIN + '#announce'
+NODE_ADMIN_ADD_USER = NODE_ADMIN + '#add-user'
 ADMIN_REQUEST = "/iq[@type='get' or @type='set']" \
                 "/command[@xmlns='%s' and @node='/%s']" % \
                 (NS_COMMANDS, NODE_ADMIN)
@@ -52,7 +53,7 @@ class AdminClient(XMPPHandler):
             response['to'] = iq['from']
             response['id'] = iq['id']
 
-            command = response.addElement((NS_COMMANDS, "command"))
+            command = response.addElement((NS_COMMANDS, 'command'))
             command['node'] = NODE_ADMIN_ANNOUNCE
             command['sessionid'] = sessionid
 
@@ -76,4 +77,47 @@ class AdminClient(XMPPHandler):
         command['node'] = NODE_ADMIN_ANNOUNCE
         d = iq.send()
         d.addCallbacks(formReceived, error)
+        return d
+
+    def addUser(self, username, password):
+        """Add a user.
+        """
+        def resultReceived(iq):
+            return True
+
+        def formReceived(iq):
+            command = iq.command
+            sessionid = command['sessionid']
+            form = data_form.findForm(command, NODE_ADMIN)
+
+            response = IQ(self.xmlstream, 'set')
+            response['to'] = iq['from']
+            response['id'] = iq['id']
+
+            command = response.addElement((NS_COMMANDS, 'command'))
+            command['node'] = NODE_ADMIN_ADD_USER
+            command['sessionid'] = sessionid
+
+            form.formType = 'submit'
+            form.fields['accountjid'].value = username + '@' + self.parent.jid.host
+            form.fields['password'].value = password
+            form.fields['password-verify'].value = password
+
+            command.addChild(form.toElement())
+            d = response.send()
+            d.addCallbacks(resultReceived, error)
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return False
+
+        iq = IQ(self.xmlstream, 'set')
+        iq['to'] = self.parent.jid.host
+        command = iq.addElement((NS_COMMANDS, 'command'))
+        command['action'] = 'execute'
+        command['node'] = NODE_ADMIN_ADD_USER
+        d = iq.send()
+        d.addCallbacks(formReceived, error)
+
         return d

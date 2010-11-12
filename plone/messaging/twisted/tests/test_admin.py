@@ -24,10 +24,8 @@ class AdminCommandsProtocolTest(unittest.TestCase):
 
     def test_sendAnnouncement(self):
         """
-        Pinging a service should fire a deferred with None
         """
-
-        self.protocol.sendAnnouncement(u"Hello world")
+        self.protocol.sendAnnouncement(u'Hello world')
         iq = self.stub.output[-1]
         self.assertEqual(u'example.com', iq.getAttribute(u'to'))
         self.assertEqual(u'set', iq.getAttribute(u'type'))
@@ -57,7 +55,8 @@ class AdminCommandsProtocolTest(unittest.TestCase):
         iq = self.stub.output[-1]
         self.assertEqual(u'set', iq.getAttribute(u'type'))
         self.assertEqual(protocols.NS_COMMANDS, iq.command.uri)
-        self.assertEqual(protocols.NODE_ADMIN_ANNOUNCE, iq.command[u'node'])
+        self.assertEqual(protocols.NODE_ADMIN_ANNOUNCE,
+                         iq.command.getAttribute(u'node'))
         self.assertEqual(u'sid-0', iq.command.getAttribute(u'sessionid'))
         form = data_form.findForm(iq.command, protocols.NODE_ADMIN)
         self.assertEqual(u'submit', form.formType)
@@ -65,3 +64,51 @@ class AdminCommandsProtocolTest(unittest.TestCase):
         self.assertEqual(u'Announce', form.fields['subject'].value)
         self.failUnless(u'body' in form.fields)
         self.assertEqual(u'Hello world', form.fields['body'].value)
+
+    def test_addUser(self):
+        """
+        """
+
+        self.protocol.addUser(u'joe', u'secret')
+        iq = self.stub.output[-1]
+        self.assertEqual(u'example.com', iq.getAttribute(u'to'))
+        self.assertEqual(u'set', iq.getAttribute(u'type'))
+        self.assertEqual(protocols.NS_COMMANDS, iq.command.uri)
+        self.failIf(iq.command is None)
+        self.assertEqual(protocols.NODE_ADMIN_ADD_USER,
+                         iq.command.getAttribute('node'))
+        self.assertEqual('execute',iq.command.getAttribute('action'))
+        response = toResponse(iq, u'result')
+        response ['to'] = self.protocol.parent.jid.full()
+        command = response.addElement((protocols.NS_COMMANDS, u'command'))
+        command[u'node'] = protocols.NODE_ADMIN_ADD_USER
+        command[u'status'] = u'executing'
+        command[u'sessionid'] = u'sid-1'
+        form = data_form.Form(u'form')
+        form_type = data_form.Field(u'hidden',
+                                    var=u'FORM_TYPE',
+                                    value=protocols.NODE_ADMIN)
+        userjid = data_form.Field(u'jid-single',
+                                  var=u'accountjid', required=True)
+        password = data_form.Field(u'text-private',
+                                   var=u'password', required=True)
+        password_verify = data_form.Field(u'text-private',
+                                          var=u'password-verify', required=True)
+        form.addField(form_type)
+        form.addField(userjid)
+        form.addField(password)
+        form.addField(password_verify)
+        command.addContent(form.toElement())
+        self.stub.send(response)
+        iq = self.stub.output[-1]
+        self.assertEqual(u'set', iq.getAttribute(u'type'))
+        self.assertEqual(protocols.NS_COMMANDS, iq.command.uri)
+        self.assertEqual(protocols.NODE_ADMIN_ADD_USER, iq.command.getAttribute(u'node'))
+        self.assertEqual(u'sid-1', iq.command.getAttribute(u'sessionid'))
+        form = data_form.findForm(iq.command, protocols.NODE_ADMIN)
+        self.assertEqual(u'submit', form.formType)
+        self.failUnless(u'accountjid' in form.fields)
+        self.assertEqual(u'joe@example.com', form.fields['accountjid'].value)
+        self.assertEqual(u'secret', form.fields['password'].value)
+        self.assertEqual(u'secret', form.fields['password-verify'].value)
+

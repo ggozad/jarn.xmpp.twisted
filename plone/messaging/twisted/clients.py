@@ -19,7 +19,7 @@ class Admin(AdminClient):
     def connectionInitialized(self):
         logger.info("Admin user %s has logged in" % self.parent.jid.full())
         self.send(AvailablePresence(priority=-10))
-        self.sendAnnouncement('Kaka')
+        self.addUser('asd','asd')
 
 
 class PubSub(PubSubClient):
