@@ -19,16 +19,3 @@ class ReactorStarted(object):
 
     def __init__(self, obj):
         self.object = obj
-
-
-class IReactorStoped(IObjectEvent):
-    """Reactor has been stoped.
-    """
-    pass
-
-
-class ReactorStoped(object):
-    implements(IReactorStoped)
-
-    def __init__(self, obj):
-        self.object = obj

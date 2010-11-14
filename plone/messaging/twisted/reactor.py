@@ -4,7 +4,7 @@ from zope.interface import implements
 from zope.event import notify
 import  twisted.internet.selectreactor
 from plone.messaging.twisted.interfaces import IZopeReactor
-from plone.messaging.twisted.interfaces import ReactorStarted, ReactorStoped
+from plone.messaging.twisted.interfaces import ReactorStarted
 
 logger = logging.getLogger('plone.messaging.twisted')
 
@@ -19,19 +19,15 @@ class ZopeReactor(object):
 
         self.reactor = reactor_factory()
         self.poll_interval = poll_interval
-        self.reactor.callWhenRunning(self.reactorStarted)
-        self.start()
-
-    def start(self):
-        if self.reactor.running:
-            return
-        def run():
+        def start():
             logger.info("Starting Twisted reactor...")
             self.reactor.run(installSignalHandlers=0)
 
-        self.thread = threading.Thread(target=run)
+        self.thread = threading.Thread(target=start)
         self.thread.setDaemon(True)
         self.thread.start()
+
+        self.reactor.callWhenRunning(self.reactorStarted)
 
     def reactorStarted(self):
         logger.info("Twisted reactor started")
@@ -39,14 +35,6 @@ class ZopeReactor(object):
         notify(event)
         if self.poll_interval:
             self.reactor.callLater(self.poll_interval, self.reactorPoll)
-
-    def stop(self):
-        if not self.reactor.running:
-            return
-        self.reactor.callFromThread(self.reactor.stop)
-        self.thread.join(3)
-        event = ReactorStoped(self.reactor)
-        notify(event)
 
     def reactorPoll(self):
         logger.info("Twisted poll")
