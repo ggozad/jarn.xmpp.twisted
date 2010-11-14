@@ -13,8 +13,6 @@ class ReactorTests(unittest.TestCase):
         self.failUnless(zr.reactor.running)
 
     def test_reactor_accepts_deferreds(self):
-        zr = getUtility(IZopeReactor).reactor
-
         def times_two(x):
             d = defer.Deferred()
             zr = getUtility(IZopeReactor).reactor
@@ -27,3 +25,12 @@ class ReactorTests(unittest.TestCase):
         d = times_two(2)
         d.addCallback(cb)
         return d
+
+    def test_stop_start(self):
+        zr = getUtility(IZopeReactor)
+        zr.stop()
+        self.failIf(zr.reactor.running)
+        # Start again
+        zr.start()
+        self.failUnless(zr.reactor.running)
+
