@@ -10,8 +10,10 @@ class ReactorFixture(PloneSandboxLayer):
 
     def setUpZope(self, app, configurationContext):
         # Load ZCML
+        print "TWISTED context: %s" %configurationContext
         import plone.messaging.twisted
         xmlconfig.file('configure.zcml', plone.messaging.twisted, context=configurationContext)
+        self['reactor_context'] = configurationContext
 
 
 REACTOR_FIXTURE = ReactorFixture()
