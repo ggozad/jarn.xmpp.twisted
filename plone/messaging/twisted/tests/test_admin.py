@@ -7,8 +7,13 @@ from wokkel import data_form
 from plone.messaging.twisted import protocols
 
 
-class ParentWithJID(object):
-    jid = JID("user@example.com")
+class FactoryWithJID(object):
+
+    class Object(object):
+        pass
+
+    authenticator = Object()
+    authenticator.jid = JID(u'user@example.com')
 
 
 class AdminCommandsProtocolTest(unittest.TestCase):
@@ -17,15 +22,12 @@ class AdminCommandsProtocolTest(unittest.TestCase):
 
     def setUp(self):
         self.stub = XmlStreamStub()
+        self.stub.xmlstream.factory = FactoryWithJID()
         self.protocol = protocols.AdminClient()
         self.protocol.xmlstream = self.stub.xmlstream
         self.protocol.connectionInitialized()
-        self.protocol.parent = ParentWithJID()
 
     def test_addUser(self):
-        """
-        """
-
         self.protocol.addUser(u'joe@example.com', u'secret')
 
         iq = self.stub.output[-1]
@@ -35,9 +37,9 @@ class AdminCommandsProtocolTest(unittest.TestCase):
         self.failIf(iq.command is None)
         self.assertEqual(protocols.NODE_ADMIN_ADD_USER,
                          iq.command.getAttribute('node'))
-        self.assertEqual('execute',iq.command.getAttribute('action'))
+        self.assertEqual('execute', iq.command.getAttribute('action'))
         response = toResponse(iq, u'result')
-        response ['to'] = self.protocol.parent.jid.full()
+        response['to'] = self.protocol.xmlstream.factory.authenticator.jid.full()
         command = response.addElement((protocols.NS_COMMANDS, u'command'))
         command[u'node'] = protocols.NODE_ADMIN_ADD_USER
         command[u'status'] = u'executing'
@@ -74,9 +76,6 @@ class AdminCommandsProtocolTest(unittest.TestCase):
         self.assertEqual(u'secret', form.fields['password-verify'].value)
 
     def test_deleteUsers(self):
-        """
-        """
-
         self.protocol.deleteUsers(u'joe@example.com')
 
         iq = self.stub.output[-1]
@@ -86,9 +85,9 @@ class AdminCommandsProtocolTest(unittest.TestCase):
         self.failIf(iq.command is None)
         self.assertEqual(protocols.NODE_ADMIN_DELETE_USER,
                          iq.command.getAttribute('node'))
-        self.assertEqual('execute',iq.command.getAttribute('action'))
+        self.assertEqual('execute', iq.command.getAttribute('action'))
         response = toResponse(iq, u'result')
-        response ['to'] = self.protocol.parent.jid.full()
+        response['to'] = self.protocol.xmlstream.factory.authenticator.jid.full()
         command = response.addElement((protocols.NS_COMMANDS, u'command'))
         command[u'node'] = protocols.NODE_ADMIN_DELETE_USER
         command[u'status'] = u'executing'
@@ -115,8 +114,6 @@ class AdminCommandsProtocolTest(unittest.TestCase):
         self.assertEqual([u'joe@example.com'], form.fields['accountjids'].values)
 
     def test_sendAnnouncement(self):
-        """
-        """
         self.protocol.sendAnnouncement(u'Hello world')
 
         iq = self.stub.output[-1]
@@ -126,10 +123,10 @@ class AdminCommandsProtocolTest(unittest.TestCase):
         self.failIf(iq.command is None)
         self.assertEqual(protocols.NODE_ADMIN_ANNOUNCE,
                          iq.command.getAttribute('node'))
-        self.assertEqual('execute',iq.command.getAttribute('action'))
+        self.assertEqual('execute', iq.command.getAttribute('action'))
 
         response = toResponse(iq, u'result')
-        response ['to'] = self.protocol.parent.jid.full()
+        response['to'] = self.protocol.xmlstream.factory.authenticator.jid.full()
         command = response.addElement((protocols.NS_COMMANDS, u'command'))
         command[u'node'] = protocols.NODE_ADMIN_ANNOUNCE
         command[u'status'] = u'executing'
@@ -157,4 +154,3 @@ class AdminCommandsProtocolTest(unittest.TestCase):
         self.assertEqual(u'Announce', form.fields['subject'].value)
         self.failUnless(u'body' in form.fields)
         self.assertEqual(u'Hello world', form.fields['body'].value)
-
