@@ -74,7 +74,7 @@ class AdminClient(XMPPHandler):
             return False
 
         iq = IQ(self.xmlstream, 'set')
-        iq['to'] = self.parent.jid.host
+        iq['to'] = self.xmlstream.factory.authenticator.jid.host
         command = iq.addElement((NS_COMMANDS, 'command'))
         command['action'] = 'execute'
         command['node'] = NODE_ADMIN_ADD_USER
