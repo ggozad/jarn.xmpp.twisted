@@ -43,7 +43,7 @@ class AdminClient(XMPPHandler):
 
         def resultReceived(iq):
             logger.info("%s: Added user %s" % \
-                        (self.parent.jid.full(), userjid))
+                (self.xmlstream.factory.authenticator.jid.full(), userjid))
             return True
 
         def formReceived(iq):
@@ -88,7 +88,7 @@ class AdminClient(XMPPHandler):
 
         def resultReceived(iq):
             logger.info("%s: Deleted users %s" % \
-                        (self.parent.jid.full(), userjids))
+                (self.xmlstream.factory.authenticator.jid.full(), userjids))
             return True
 
         def formReceived(iq):
@@ -119,7 +119,7 @@ class AdminClient(XMPPHandler):
         if isinstance(userjids, basestring):
             userjids = [userjids]
         iq = IQ(self.xmlstream, 'set')
-        iq['to'] = self.parent.jid.host
+        iq['to'] = self.xmlstream.factory.authenticator.jid.host
         command = iq.addElement((NS_COMMANDS, 'command'))
         command['action'] = 'execute'
         command['node'] = NODE_ADMIN_DELETE_USER
@@ -163,7 +163,7 @@ class AdminClient(XMPPHandler):
             return False
 
         iq = IQ(self.xmlstream, 'set')
-        iq['to'] = self.parent.jid.host
+        iq['to'] = self.xmlstream.factory.authenticator.jid.host
         command = iq.addElement((NS_COMMANDS, 'command'))
         command['action'] = 'execute'
         command['node'] = NODE_ADMIN_ANNOUNCE
