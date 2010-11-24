@@ -67,6 +67,7 @@ class AdminClient(XMPPHandler):
             command.addChild(form.toElement())
             d = response.send()
             d.addCallbacks(resultReceived, error)
+            return d
 
         def error(failure):
             # TODO: Handle gracefully?
@@ -110,6 +111,7 @@ class AdminClient(XMPPHandler):
             command.addChild(form.toElement())
             d = response.send()
             d.addCallbacks(resultReceived, error)
+            return d
 
         def error(failure):
             # TODO: Handle gracefully?
@@ -156,6 +158,7 @@ class AdminClient(XMPPHandler):
             command.addChild(form.toElement())
             d = response.send()
             d.addCallbacks(resultReceived, error)
+            return d
 
         def error(failure):
             # TODO: Handle gracefully?
