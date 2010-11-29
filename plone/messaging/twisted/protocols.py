@@ -5,18 +5,21 @@ The XMPP Service Administration protocol is documented in
 U{XEP-0133<http://xmpp.org/extensions/xep-0133.html>}.
 """
 
+import string
+import random
 import logging
-from twisted.words.protocols.jabber.error import StanzaError
+from twisted.internet import defer
+from twisted.words.xish.domish import Element
 from twisted.words.protocols.jabber.xmlstream import IQ
-
 try:
     from twisted.words.protocols.xmlstream import XMPPHandler
 except ImportError:
     from wokkel.subprotocols import XMPPHandler
 
 from wokkel import data_form
-
-
+NS_CLIENT = 'jabber:client'
+XHTML_IM = 'http://jabber.org/protocol/xhtml-im'
+XHTML = 'http://www.w3.org/1999/xhtml'
 NS_COMMANDS = 'http://jabber.org/protocol/commands'
 NODE_ADMIN = 'http://jabber.org/protocol/admin'
 NODE_ADMIN_ADD_USER = NODE_ADMIN + '#add-user'
@@ -30,10 +33,44 @@ ADMIN_REQUEST = "/iq[@type='get' or @type='set']" \
 logger = logging.getLogger('plone.messaging.twisted')
 
 
+def getRandomId():
+    chars = string.letters + string.digits
+    return ''.join([random.choice(chars) for i in range(10)])
+
+
+class ChatHandler(XMPPHandler):
+    """
+    Simple chat client.
+    This handler can send text/XHTML messages.
+    """
+
+    def sendMessage(self, to, body):
+        message = Element((None, "message",))
+        message["id"] = getRandomId()
+        message["from"] = self.xmlstream.factory.authenticator.jid.full()
+        message["to"] = to.full()
+        message["type"] = 'chat'
+        message.addElement('body', content=body)
+        self.xmlstream.send(message)
+        return True
+
+    def sendXHTMLMessage(self, to, body, xhtml_body):
+        message = Element((NS_CLIENT, "message",))
+        message["id"] = getRandomId()
+        message["from"] = self.xmlstream.factory.authenticator.jid.full()
+        message["to"] = to.full()
+        message["type"] = 'chat'
+        message.addElement('body', content=body)
+        html = message.addElement((XHTML_IM, 'html'))
+        html_body = html.addElement((XHTML, 'body'))
+        html_body.addRawXml(xhtml_body)
+        self.xmlstream.send(message)
+        return True
+
+
 class AdminHandler(XMPPHandler):
     """
     Admin client.
-
     This handler implements the protocol for sending out XMPP admin requests.
     """
 
