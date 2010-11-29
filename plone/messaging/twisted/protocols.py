@@ -30,7 +30,7 @@ ADMIN_REQUEST = "/iq[@type='get' or @type='set']" \
 logger = logging.getLogger('plone.messaging.twisted')
 
 
-class AdminClient(XMPPHandler):
+class AdminHandler(XMPPHandler):
     """
     Admin client.
 

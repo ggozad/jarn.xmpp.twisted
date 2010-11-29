@@ -23,7 +23,7 @@ class AdminCommandsProtocolTest(unittest.TestCase):
     def setUp(self):
         self.stub = XmlStreamStub()
         self.stub.xmlstream.factory = FactoryWithJID()
-        self.protocol = protocols.AdminClient()
+        self.protocol = protocols.AdminHandler()
         self.protocol.xmlstream = self.stub.xmlstream
         self.protocol.connectionInitialized()
 
