@@ -51,8 +51,9 @@ class ChatHandler(XMPPHandler):
         message["to"] = to.full()
         message["type"] = 'chat'
         message.addElement('body', content=body)
+        d = defer.Deferred()
         self.xmlstream.send(message)
-        return True
+        return d
 
     def sendXHTMLMessage(self, to, body, xhtml_body):
         message = Element((NS_CLIENT, "message",))
@@ -64,8 +65,9 @@ class ChatHandler(XMPPHandler):
         html = message.addElement((XHTML_IM, 'html'))
         html_body = html.addElement((XHTML, 'body'))
         html_body.addRawXml(xhtml_body)
+        d = defer.Deferred()
         self.xmlstream.send(message)
-        return True
+        return d
 
 
 class AdminHandler(XMPPHandler):
