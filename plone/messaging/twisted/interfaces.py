@@ -8,6 +8,11 @@ class IZopeReactor(Interface):
     pass
 
 
+class IJabberClient(Interface):
+    """ Marker interface for the JabberClient utility.
+    """
+
+
 class IReactorStarted(IObjectEvent):
     """Reactor has been started.
     """

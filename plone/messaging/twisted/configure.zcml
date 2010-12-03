@@ -5,4 +5,9 @@
 
   <utility factory=".reactor.ZopeReactor" />
 
+  <subscriber
+    for="plone.messaging.twisted.interfaces.ReactorStarted"
+    handler=".client.initJabberClient"
+    />
+
 </configure>
