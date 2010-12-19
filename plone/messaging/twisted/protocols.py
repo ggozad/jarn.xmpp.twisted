@@ -67,6 +67,7 @@ class ChatHandler(XMPPHandler):
         self.xmlstream.send(message)
         return True
 
+
 class AdminHandler(XMPPHandler):
     """
     Admin client.

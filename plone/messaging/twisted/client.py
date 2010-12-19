@@ -1,17 +1,14 @@
-"""
-XMPP subprotocol handler that for:
-    * XMPP admin.
-"""
 import random
 import string
 import logging
 from zope.interface import implements
-from zope.component import getGlobalSiteManager
+from zope.component import queryUtility
 from wokkel import client
 from wokkel.xmppim import AvailablePresence
 from wokkel.pubsub import PubSubClient
 from plone.messaging.twisted.protocols import AdminHandler, ChatHandler
 from plone.messaging.twisted.interfaces import IJabberClient
+from plone.messaging.twisted.interfaces import IZopeReactor
 
 logger = logging.getLogger('plone.messaging.core')
 
@@ -49,38 +46,32 @@ class JabberClient(object):
 
     implements(IJabberClient)
 
-    def __init__(self, reactor):
-        self._reactor = reactor
-
     def execute(self, jid, password,
                 callback, extra_handlers=[], errback=None):
+
         chars = string.letters + string.digits
         resource = 'auto-' + ''.join([random.choice(chars) for i in range(10)])
         jid.resource=resource
+
         factory = client.DeferredClientFactory(jid, password)
         for handler in extra_handlers:
             handler.setHandlerParent(factory.streamManager)
+
         d = client.clientCreator(factory)
-        d.addCallback(callback)
 
         def disconnect(result):
             factory.streamManager.xmlstream.sendFooter()
             factory.streamManager.xmlstream.transport.connector.disconnect()
             return result
-        d.addCallback(disconnect)
 
+        d.addCallback(callback)
+        d.addCallback(disconnect)
         if errback:
             d.addErrback(errback)
         else:
             d.addErrback(logger.error)
 
-        self._reactor.callFromThread(self._reactor.connectTCP,
-                                     "localhost", 5222, factory)
+        zr = queryUtility(IZopeReactor)
+        if zr:
+            zr.reactor.callFromThread(zr.reactor.connectTCP, "localhost", 5222, factory)
         return d
-
-
-def initJabberClient(event):
-    reactor = event.object
-    sm = getGlobalSiteManager()
-    jabber_client = JabberClient(reactor)
-    sm.registerUtility(jabber_client, IJabberClient)

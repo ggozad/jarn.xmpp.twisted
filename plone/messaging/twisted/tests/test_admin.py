@@ -1,5 +1,4 @@
 from twisted.trial import unittest
-from twisted.words.protocols.jabber.error import StanzaError
 from twisted.words.protocols.jabber.jid import JID
 from twisted.words.protocols.jabber.xmlstream import toResponse
 from wokkel.test.helpers import XmlStreamStub
