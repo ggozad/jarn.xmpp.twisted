@@ -8,15 +8,14 @@ U{XEP-0133<http://xmpp.org/extensions/xep-0133.html>}.
 import string
 import random
 import logging
-from twisted.internet import defer
 from twisted.words.xish.domish import Element
+from twisted.words.protocols.jabber.jid import JID
 from twisted.words.protocols.jabber.xmlstream import IQ
-try:
-    from twisted.words.protocols.xmlstream import XMPPHandler
-except ImportError:
-    from wokkel.subprotocols import XMPPHandler
-
+from wokkel.pubsub import PubSubClient as WokkelPubSubClient
+from wokkel.subprotocols import XMPPHandler
 from wokkel import data_form
+from wokkel.pubsub import NS_PUBSUB, NS_PUBSUB_OWNER
+
 NS_CLIENT = 'jabber:client'
 XHTML_IM = 'http://jabber.org/protocol/xhtml-im'
 XHTML = 'http://www.w3.org/1999/xhtml'
@@ -209,4 +208,30 @@ class AdminHandler(XMPPHandler):
         command['node'] = NODE_ADMIN_ANNOUNCE
         d = iq.send()
         d.addCallbacks(formReceived, error)
+        return d
+
+
+class PubSubHandler(WokkelPubSubClient):
+
+    def getAffiliations(self, service, nodeIdentifier):
+
+        def cb(result):
+            res = []
+            affiliations = result.pubsub.affiliations
+            for affiliate in affiliations.children:
+                res.append((JID(affiliate['jid']), affiliate['affiliation'],))
+            return res
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return False
+
+        iq = IQ(self.xmlstream, 'set')
+        iq['to'] = service.full()
+        pubsub = iq.addElement((NS_PUBSUB_OWNER, 'pubsub'))
+        affiliations = pubsub.addElement('affiliations')
+        affiliations['node']=nodeIdentifier
+        d = iq.send()
+        d.addCallbacks(cb, error)
         return d
