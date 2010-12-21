@@ -64,12 +64,16 @@ class JabberClient(object):
             factory.streamManager.xmlstream.transport.connector.disconnect()
             return result
 
+        def defaultErrBack(error_stanza):
+            logger.error(error_stanza.getErrorMessage())
+            logger.error("StanzaError: %s" % error_stanza.value.stanza.toXml())
+
         d.addCallback(callback)
         d.addCallback(disconnect)
         if errback:
             d.addErrback(errback)
         else:
-            d.addErrback(logger.error)
+            d.addErrback(defaultErrBack)
 
         zr = queryUtility(IZopeReactor)
         if zr:
