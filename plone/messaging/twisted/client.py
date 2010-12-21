@@ -10,7 +10,7 @@ from plone.messaging.twisted.protocols import AdminHandler, ChatHandler
 from plone.messaging.twisted.interfaces import IJabberClient
 from plone.messaging.twisted.interfaces import IZopeReactor
 
-logger = logging.getLogger('plone.messaging.core')
+logger = logging.getLogger('plone.messaging.twisted')
 
 
 class Admin(AdminHandler):
@@ -38,8 +38,8 @@ class Chatter(ChatHandler):
 class PubSub(PubSubClient):
 
     def connectionInitialized(self):
-        logger.info("Pubsub user %s has logged in" % self.parent.jid.full())
-        self.send(AvailablePresence(priority=-10))
+        logger.info("Pubsub user %s has logged in" %
+            self.xmlstream.factory.authenticator.jid.full())
 
 
 class JabberClient(object):
