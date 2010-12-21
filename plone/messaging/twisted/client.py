@@ -41,6 +41,10 @@ class PubSub(PubSubClient):
         logger.info("Pubsub user %s has logged in" %
             self.xmlstream.factory.authenticator.jid.full())
 
+    def connectionLost(self, reason):
+        logger.info("Pubsub user %s has logged out." %
+            self.xmlstream.factory.authenticator.jid.full())
+
 
 class JabberClient(object):
 
