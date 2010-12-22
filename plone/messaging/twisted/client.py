@@ -6,7 +6,7 @@ from zope.component import queryUtility
 from wokkel import client
 from wokkel.xmppim import AvailablePresence
 from wokkel.pubsub import PubSubClient
-from plone.messaging.twisted.protocols import AdminHandler, ChatHandler
+from plone.messaging.twisted.protocols import AdminHandler, ChatHandler, PubSubHandler
 from plone.messaging.twisted.interfaces import IJabberClient
 from plone.messaging.twisted.interfaces import IZopeReactor
 
@@ -35,7 +35,7 @@ class Chatter(ChatHandler):
             self.xmlstream.factory.authenticator.jid.full())
 
 
-class PubSub(PubSubClient):
+class PubSub(PubSubHandler):
 
     def connectionInitialized(self):
         logger.info("Pubsub user %s has logged in" %

@@ -227,11 +227,37 @@ class PubSubHandler(WokkelPubSubClient):
             logger.error(failure.getTraceback())
             return False
 
+        iq = IQ(self.xmlstream, 'get')
+        iq['to'] = service.full()
+        pubsub = iq.addElement((NS_PUBSUB_OWNER, 'pubsub'))
+        affiliations = pubsub.addElement('affiliations')
+        affiliations['node']=nodeIdentifier
+        d = iq.send()
+        d.addCallbacks(cb, error)
+        return d
+
+    def modifyAffiliations(self, service, nodeIdentifier, delta):
+
+        def cb(result):
+            if result['type']==u'result':
+                return True
+            return False
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return False
+
         iq = IQ(self.xmlstream, 'set')
         iq['to'] = service.full()
         pubsub = iq.addElement((NS_PUBSUB_OWNER, 'pubsub'))
         affiliations = pubsub.addElement('affiliations')
         affiliations['node']=nodeIdentifier
+        for jid, affiliation in delta:
+            el = affiliations.addElement('affiliation')
+            el['jid'] = jid.userhost()
+            el['affiliation'] = affiliation
+
         d = iq.send()
         d.addCallbacks(cb, error)
         return d

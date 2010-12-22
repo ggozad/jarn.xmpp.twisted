@@ -30,7 +30,7 @@ class PubSubCommandsProtocolTest(unittest.TestCase):
         d = self.protocol.getAffiliations(JID(u'pubsub.example.com'), u'foo_node')
         iq = self.stub.output[-1]
         self.assertEqual(u'pubsub.example.com', iq.getAttribute(u'to'))
-        self.assertEqual(u'set', iq.getAttribute(u'type'))
+        self.assertEqual(u'get', iq.getAttribute(u'type'))
         self.failIf(iq.pubsub is None)
         self.assertEqual(protocols.NS_PUBSUB_OWNER, iq.pubsub.uri)
         self.failIf(iq.pubsub.affiliations is None)
@@ -54,6 +54,32 @@ class PubSubCommandsProtocolTest(unittest.TestCase):
             self.assertEqual(result,
             [(JID(u'user@example.com'), 'owner'),
              (JID(u'foo@example.com'), 'publisher')])
+
+        d.addCallback(cb)
+        return d
+
+    def test_modifyAffiliations(self):
+        d = self.protocol.modifyAffiliations(JID(u'pubsub.example.com'),
+                                             u'foo_node',
+                                             [(JID(u'foo@example.com'), 'none')])
+        iq = self.stub.output[-1]
+        self.assertEqual(u'pubsub.example.com', iq.getAttribute(u'to'))
+        self.assertEqual(u'set', iq.getAttribute(u'type'))
+        self.failIf(iq.pubsub is None)
+        self.assertEqual(protocols.NS_PUBSUB_OWNER, iq.pubsub.uri)
+        self.failIf(iq.pubsub.affiliations is None)
+        self.assertEqual('foo_node',
+                         iq.pubsub.affiliations['node'])
+        affiliation = iq.pubsub.affiliations.affiliation
+        self.assertEqual('foo@example.com', affiliation['jid'])
+        self.assertEqual('none', affiliation['affiliation'])
+
+        response = toResponse(iq, u'result')
+        response['to'] = self.protocol.xmlstream.factory.authenticator.jid.full()
+        self.stub.send(response)
+
+        def cb(result):
+            self.assertEqual(result, True)
 
         d.addCallback(cb)
         return d
