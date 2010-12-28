@@ -1,5 +1,5 @@
-from zope.interface import Interface, implements
 from zope.component.interfaces import IObjectEvent
+from zope.interface import Interface, implements
 
 
 class IZopeReactor(Interface):
