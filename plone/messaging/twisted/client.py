@@ -7,7 +7,7 @@ from wokkel import client
 from wokkel.xmppim import AvailablePresence
 from wokkel.pubsub import PubSubClient
 from plone.messaging.twisted.protocols import AdminHandler, ChatHandler, PubSubHandler
-from plone.messaging.twisted.interfaces import IJabberClient
+from plone.messaging.twisted.interfaces import IDeferredXMPPClient
 from plone.messaging.twisted.interfaces import IZopeReactor
 
 logger = logging.getLogger('plone.messaging.twisted')
@@ -46,9 +46,9 @@ class PubSub(PubSubHandler):
             self.xmlstream.factory.authenticator.jid.full())
 
 
-class JabberClient(object):
+class DeferredXMPPClient(object):
 
-    implements(IJabberClient)
+    implements(IDeferredXMPPClient)
 
     def execute(self, jid, password,
                 callback, extra_handlers=[], errback=None):

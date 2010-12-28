@@ -8,8 +8,8 @@ class IZopeReactor(Interface):
     pass
 
 
-class IJabberClient(Interface):
-    """ Marker interface for the JabberClient utility.
+class IDeferredXMPPClient(Interface):
+    """ Marker interface for the DeferredXMPPClient utility.
     """
 
 
