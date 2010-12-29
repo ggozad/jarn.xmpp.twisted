@@ -8,7 +8,7 @@ from twisted.words.protocols.jabber.xmlstream import IQ
 from wokkel.pubsub import PubSubClient as WokkelPubSubClient
 from wokkel.subprotocols import XMPPHandler
 from wokkel import data_form
-from wokkel.pubsub import NS_PUBSUB_OWNER
+from wokkel.pubsub import NS_PUBSUB_OWNER, NS_PUBSUB_NODE_CONFIG
 from wokkel.disco import NS_DISCO_INFO, NS_DISCO_ITEMS
 
 NS_CLIENT = 'jabber:client'
@@ -276,9 +276,64 @@ class PubSubHandler(WokkelPubSubClient):
         d.addCallbacks(cb, error)
         return d
 
+    def getNodeConfiguration(self, service, node):
+
+        def cb(result):
+            fields = [field
+                      for field in result.pubsub.configure.x.children
+                      if field[u'type']!=u'hidden']
+            result = dict()
+            for field in fields:
+                value = None
+                try:
+                    value = field.value.children[0]
+                except (AttributeError, IndexError):
+                    pass
+                result[field['var']] = value
+            return result
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return []
+
+        iq = IQ(self.xmlstream, 'get')
+        iq['to'] = service.full()
+        pubsub = iq.addElement((NS_PUBSUB_OWNER, 'pubsub'))
+        configure = pubsub.addElement('configure')
+        configure['node'] = node
+        d = iq.send()
+        d.addCallbacks(cb, error)
+        return d
+
+
+    def configureNode(self, service, node, options):
+
+        def cb(result):
+            return True
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return False
+
+        form = data_form.Form(formType='submit',
+                              formNamespace=NS_PUBSUB_NODE_CONFIG)
+        form.makeFields(options)
+        iq = IQ(self.xmlstream, 'set')
+        iq['to'] = service.full()
+        pubsub = iq.addElement((NS_PUBSUB_OWNER, 'pubsub'))
+        configure = pubsub.addElement('configure')
+        configure['node'] = node
+        configure = configure.addChild(form.toElement())
+        d = iq.send()
+        d.addCallbacks(cb, error)
+        return d
+
     def associateNodeToCollection(self, service,
                                   nodeIdentifier, collectionIdentifier):
-
+        """ XXX: Not supported by ejabberd
+        """
         def cb(result):
             return True
 
