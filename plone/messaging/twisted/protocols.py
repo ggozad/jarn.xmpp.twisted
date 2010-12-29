@@ -276,6 +276,29 @@ class PubSubHandler(WokkelPubSubClient):
         d.addCallbacks(cb, error)
         return d
 
+    def associateNodeToCollection(self, service,
+                                  nodeIdentifier, collectionIdentifier):
+
+        def cb(result):
+            return True
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return False
+
+        iq = IQ(self.xmlstream, 'set')
+        iq['to'] = service.full()
+        pubsub = iq.addElement((NS_PUBSUB_OWNER, 'pubsub'))
+        collection = pubsub.addElement('collection')
+        collection['node'] = collectionIdentifier
+        associate = collection.addElement('associate')
+        associate['node'] = nodeIdentifier
+        d = iq.send()
+        d.addCallbacks(cb, error)
+        return d
+
+
     def getAffiliations(self, service, nodeIdentifier):
 
         def cb(result):
