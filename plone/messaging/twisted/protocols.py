@@ -8,8 +8,8 @@ from twisted.words.protocols.jabber.xmlstream import IQ
 from wokkel.pubsub import PubSubClient as WokkelPubSubClient
 from wokkel.subprotocols import XMPPHandler
 from wokkel import data_form
-from wokkel.pubsub import NS_PUBSUB, NS_PUBSUB_OWNER
-from wokkel.disco import NS_DISCO, NS_DISCO_INFO, NS_DISCO_ITEMS
+from wokkel.pubsub import NS_PUBSUB_OWNER
+from wokkel.disco import NS_DISCO_INFO, NS_DISCO_ITEMS
 
 NS_CLIENT = 'jabber:client'
 XHTML_IM = 'http://jabber.org/protocol/xhtml-im'
@@ -243,6 +243,35 @@ class PubSubHandler(WokkelPubSubClient):
         iq['to'] = service.full()
         query = iq.addElement((NS_DISCO_INFO, 'query'))
         query['node'] = nodeIdentifier
+        d = iq.send()
+        d.addCallbacks(cb, error)
+        return d
+
+    def getDefaultNodeConfiguration(self, service):
+
+        def cb(result):
+            fields = [field
+                      for field in result.pubsub.default.x.children
+                      if field[u'type']!=u'hidden']
+            result = dict()
+            for field in fields:
+                value = None
+                try:
+                    value = field.value.children[0]
+                except (AttributeError, IndexError):
+                    pass
+                result[field['var']] = value
+            return result
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return []
+
+        iq = IQ(self.xmlstream, 'get')
+        iq['to'] = service.full()
+        pubsub = iq.addElement((NS_PUBSUB_OWNER, 'pubsub'))
+        pubsub.addElement('default')
         d = iq.send()
         d.addCallbacks(cb, error)
         return d
