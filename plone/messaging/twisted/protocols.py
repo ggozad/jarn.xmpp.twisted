@@ -228,6 +228,25 @@ class PubSubHandler(WokkelPubSubClient):
         d.addCallbacks(cb, error)
         return d
 
+    def getNodeType(self, service, nodeIdentifier):
+
+        def cb(result):
+            identity = result.query.identity
+            return identity['type']
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return []
+
+        iq = IQ(self.xmlstream, 'get')
+        iq['to'] = service.full()
+        query = iq.addElement((NS_DISCO_INFO, 'query'))
+        query['node'] = nodeIdentifier
+        d = iq.send()
+        d.addCallbacks(cb, error)
+        return d
+
     def getAffiliations(self, service, nodeIdentifier):
 
         def cb(result):
