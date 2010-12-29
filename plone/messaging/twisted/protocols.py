@@ -1,13 +1,7 @@
-"""
-XMPP Admin.
-
-The XMPP Service Administration protocol is documented in
-U{XEP-0133<http://xmpp.org/extensions/xep-0133.html>}.
-"""
-
 import string
 import random
 import logging
+
 from twisted.words.xish.domish import Element
 from twisted.words.protocols.jabber.jid import JID
 from twisted.words.protocols.jabber.xmlstream import IQ
@@ -15,6 +9,7 @@ from wokkel.pubsub import PubSubClient as WokkelPubSubClient
 from wokkel.subprotocols import XMPPHandler
 from wokkel import data_form
 from wokkel.pubsub import NS_PUBSUB, NS_PUBSUB_OWNER
+from wokkel.disco import NS_DISCO, NS_DISCO_INFO, NS_DISCO_ITEMS
 
 NS_CLIENT = 'jabber:client'
 XHTML_IM = 'http://jabber.org/protocol/xhtml-im'
@@ -44,7 +39,7 @@ class ChatHandler(XMPPHandler):
     """
 
     def sendMessage(self, to, body):
-        message = Element((None, "message",))
+        message = Element((None, "message", ))
         message["id"] = getRandomId()
         message["from"] = self.xmlstream.factory.authenticator.jid.full()
         message["to"] = to.full()
@@ -54,7 +49,7 @@ class ChatHandler(XMPPHandler):
         return True
 
     def sendXHTMLMessage(self, to, body, xhtml_body):
-        message = Element((NS_CLIENT, "message",))
+        message = Element((NS_CLIENT, "message", ))
         message["id"] = getRandomId()
         message["from"] = self.xmlstream.factory.authenticator.jid.full()
         message["to"] = to.full()
@@ -213,19 +208,39 @@ class AdminHandler(XMPPHandler):
 
 class PubSubHandler(WokkelPubSubClient):
 
+    def getNodes(self, service, nodeIdentifier=None):
+
+        def cb(result):
+            items = result.query.children
+            return [item.attributes for item in items]
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return []
+
+        iq = IQ(self.xmlstream, 'get')
+        iq['to'] = service.full()
+        query = iq.addElement((NS_DISCO_ITEMS, 'query'))
+        if nodeIdentifier is not None:
+            query['node'] = nodeIdentifier
+        d = iq.send()
+        d.addCallbacks(cb, error)
+        return d
+
     def getAffiliations(self, service, nodeIdentifier):
 
         def cb(result):
             res = []
             affiliations = result.pubsub.affiliations
             for affiliate in affiliations.children:
-                res.append((JID(affiliate['jid']), affiliate['affiliation'],))
+                res.append((JID(affiliate['jid']), affiliate['affiliation'], ))
             return res
 
         def error(failure):
             # TODO: Handle gracefully?
             logger.error(failure.getTraceback())
-            return False
+            return []
 
         iq = IQ(self.xmlstream, 'get')
         iq['to'] = service.full()
