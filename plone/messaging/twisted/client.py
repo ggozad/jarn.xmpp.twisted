@@ -116,6 +116,8 @@ class XMPPClient(StreamManager):
         if zr:
             zr.reactor.callFromThread(zr.reactor.connectTCP,
                 self.host, self.port, self.factory)
+        else: # When testing there is no zope reactor. Just a normal one ;)
+            raise NotImplementedError
 
     def _authd(self, xs):
         """
