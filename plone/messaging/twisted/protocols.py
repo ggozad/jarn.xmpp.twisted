@@ -208,6 +208,9 @@ class AdminHandler(XMPPHandler):
 
 class PubSubHandler(WokkelPubSubClient):
 
+    def itemsReceived(self, event):
+        pass
+
     def getNodes(self, service, nodeIdentifier=None):
 
         def cb(result):
@@ -224,6 +227,52 @@ class PubSubHandler(WokkelPubSubClient):
         query = iq.addElement((NS_DISCO_ITEMS, 'query'))
         if nodeIdentifier is not None:
             query['node'] = nodeIdentifier
+        d = iq.send()
+        d.addCallbacks(cb, error)
+        return d
+
+    def getSubscriptions(self, service, nodeIdentifier):
+
+        def cb(result):
+            subscriptions = result.pubsub.subscriptions.children
+            return [item.attributes for item in subscriptions]
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return []
+
+        iq = IQ(self.xmlstream, 'get')
+        iq['to'] = service.full()
+        pubsub = iq.addElement((NS_PUBSUB_OWNER, 'pubsub'))
+        subscriptions = pubsub.addElement('subscriptions')
+        subscriptions['node'] = nodeIdentifier
+        d = iq.send()
+        d.addCallbacks(cb, error)
+        return d
+
+    def setSubscriptions(self, service, nodeIdentifier, delta):
+
+        def cb(result):
+            if result['type']==u'result':
+                return True
+            return False
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return False
+
+        iq = IQ(self.xmlstream, 'set')
+        iq['to'] = service.full()
+        pubsub = iq.addElement((NS_PUBSUB_OWNER, 'pubsub'))
+        subscriptions = pubsub.addElement('subscriptions')
+        subscriptions['node']=nodeIdentifier
+        for jid, subscription in delta:
+            el = subscriptions.addElement('subscription')
+            el['jid'] = jid.userhost()
+            el['subscription'] = subscription
+
         d = iq.send()
         d.addCallbacks(cb, error)
         return d
@@ -306,7 +355,6 @@ class PubSubHandler(WokkelPubSubClient):
         d.addCallbacks(cb, error)
         return d
 
-
     def configureNode(self, service, node, options):
 
         def cb(result):
@@ -334,6 +382,7 @@ class PubSubHandler(WokkelPubSubClient):
                                   nodeIdentifier, collectionIdentifier):
         """ XXX: Not supported by ejabberd
         """
+
         def cb(result):
             return True
 
@@ -352,7 +401,6 @@ class PubSubHandler(WokkelPubSubClient):
         d = iq.send()
         d.addCallbacks(cb, error)
         return d
-
 
     def getAffiliations(self, service, nodeIdentifier):
 
