@@ -209,7 +209,8 @@ class AdminHandler(XMPPHandler):
 class PubSubHandler(WokkelPubSubClient):
 
     def itemsReceived(self, event):
-        pass
+        if hasattr(self.parent, 'itemsReceived'):
+            self.parent.itemsReceived(event)
 
     def getNodes(self, service, nodeIdentifier=None):
 
