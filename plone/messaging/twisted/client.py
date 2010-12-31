@@ -7,44 +7,10 @@ from zope.component import queryUtility
 from wokkel import client
 from wokkel.subprotocols import StreamManager
 
-from plone.messaging.twisted.protocols import AdminHandler, ChatHandler, PubSubHandler
 from plone.messaging.twisted.interfaces import IDeferredXMPPClient
 from plone.messaging.twisted.interfaces import IZopeReactor
 
 logger = logging.getLogger('plone.messaging.twisted')
-
-
-class Admin(AdminHandler):
-
-    def connectionInitialized(self):
-        logger.info("Admin user %s has logged in." %
-            self.xmlstream.factory.authenticator.jid.full())
-
-    def connectionLost(self, reason):
-        logger.info("Admin user %s has logged out." %
-            self.xmlstream.factory.authenticator.jid.full())
-
-
-class Chatter(ChatHandler):
-
-    def connectionInitialized(self):
-        logger.info("User %s has logged in." %
-            self.xmlstream.factory.authenticator.jid.full())
-
-    def connectionLost(self, reason):
-        logger.info("User %s has logged out." %
-            self.xmlstream.factory.authenticator.jid.full())
-
-
-class PubSub(PubSubHandler):
-
-    def connectionInitialized(self):
-        logger.info("Pubsub user %s has logged in" %
-            self.xmlstream.factory.authenticator.jid.full())
-
-    def connectionLost(self, reason):
-        logger.info("Pubsub user %s has logged out." %
-            self.xmlstream.factory.authenticator.jid.full())
 
 
 def randomResource():
@@ -87,7 +53,8 @@ class DeferredXMPPClient(object):
 
         zr = queryUtility(IZopeReactor)
         if zr:
-            zr.reactor.callFromThread(zr.reactor.connectTCP, "localhost", 5222, factory)
+            zr.reactor.callFromThread(zr.reactor.connectTCP,
+                                      "localhost", 5222, factory)
         return d
 
 
