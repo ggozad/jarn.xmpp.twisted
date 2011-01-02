@@ -281,8 +281,7 @@ class PubSubHandler(WokkelPubSubClient):
     def getNodeType(self, service, nodeIdentifier):
 
         def cb(result):
-            identity = result.query.identity
-            return {result.query['node']: result.query.identity['type']}
+            return result.query.identity['type']
 
         def error(failure):
             # TODO: Handle gracefully?
