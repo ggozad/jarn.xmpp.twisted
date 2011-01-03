@@ -236,7 +236,7 @@ class PubSubHandler(WokkelPubSubClient):
 
         def cb(result):
             subscriptions = result.pubsub.subscriptions.children
-            return [item.attributes for item in subscriptions]
+            return [(JID(item['jid']), item['subscription']) for item in subscriptions]
 
         def error(failure):
             # TODO: Handle gracefully?
