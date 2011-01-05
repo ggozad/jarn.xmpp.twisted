@@ -12,13 +12,14 @@ from wokkel.pubsub import NS_PUBSUB_OWNER, NS_PUBSUB_NODE_CONFIG
 from wokkel.disco import NS_DISCO_INFO, NS_DISCO_ITEMS
 
 NS_CLIENT = 'jabber:client'
-XHTML_IM = 'http://jabber.org/protocol/xhtml-im'
-XHTML = 'http://www.w3.org/1999/xhtml'
+NS_ROSTER_X = 'http://jabber.org/protocol/rosterx'
 NS_COMMANDS = 'http://jabber.org/protocol/commands'
 NODE_ADMIN = 'http://jabber.org/protocol/admin'
 NODE_ADMIN_ADD_USER = NODE_ADMIN + '#add-user'
 NODE_ADMIN_DELETE_USER = NODE_ADMIN + '#delete-user'
 NODE_ADMIN_ANNOUNCE = NODE_ADMIN + '#announce'
+XHTML_IM = 'http://jabber.org/protocol/xhtml-im'
+XHTML = 'http://www.w3.org/1999/xhtml'
 
 ADMIN_REQUEST = "/iq[@type='get' or @type='set']" \
                 "/command[@xmlns='%s' and @node='/%s']" % \
@@ -58,6 +59,21 @@ class ChatHandler(XMPPHandler):
         html = message.addElement((XHTML_IM, 'html'))
         html_body = html.addElement((XHTML, 'body'))
         html_body.addRawXml(xhtml_body)
+        self.xmlstream.send(message)
+        return True
+
+    def sendRosterItemAddSuggestion(self, to, items, group=None):
+        message = Element((None, "message", ))
+        message["id"] = getRandomId()
+        message["from"] = self.xmlstream.factory.authenticator.jid.full()
+        message["to"] = to.userhost()
+        x = message.addElement((NS_ROSTER_X,'x'))
+        for jid in items:
+            item = x.addElement('item')
+            item["action"]='add'
+            item["jid"] = jid.userhost()
+            if group:
+                item.addElement('group', content=group)
         self.xmlstream.send(message)
         return True
 
