@@ -36,10 +36,12 @@ def getRandomId():
 class ChatHandler(XMPPHandler):
     """
     Simple chat client.
-    This handler can send text/XHTML messages.
+    http://xmpp.org/extensions/xep-0071.html
     """
 
     def sendMessage(self, to, body):
+        """ Send a text message
+        """
         message = Element((None, "message", ))
         message["id"] = getRandomId()
         message["from"] = self.xmlstream.factory.authenticator.jid.full()
@@ -50,6 +52,8 @@ class ChatHandler(XMPPHandler):
         return True
 
     def sendXHTMLMessage(self, to, body, xhtml_body):
+        """ Send an HTML message.
+        """
         message = Element((NS_CLIENT, "message", ))
         message["id"] = getRandomId()
         message["from"] = self.xmlstream.factory.authenticator.jid.full()
@@ -63,11 +67,13 @@ class ChatHandler(XMPPHandler):
         return True
 
     def sendRosterItemAddSuggestion(self, to, items, group=None):
+        """ Suggest a user(s) to be added in the roster.
+        """
         message = Element((None, "message", ))
         message["id"] = getRandomId()
         message["from"] = self.xmlstream.factory.authenticator.jid.full()
         message["to"] = to.userhost()
-        x = message.addElement((NS_ROSTER_X,'x'))
+        x = message.addElement((NS_ROSTER_X, 'x'))
         for jid in items:
             item = x.addElement('item')
             item["action"]='add'
@@ -81,7 +87,7 @@ class ChatHandler(XMPPHandler):
 class AdminHandler(XMPPHandler):
     """
     Admin client.
-    This handler implements the protocol for sending out XMPP admin requests.
+    http://xmpp.org/extensions/xep-0133.html
     """
 
     def addUser(self, userjid, password):
@@ -223,6 +229,10 @@ class AdminHandler(XMPPHandler):
 
 
 class PubSubHandler(WokkelPubSubClient):
+    """ Pubslish-Subscribe
+    http://xmpp.org/extensions/xep-0060.html
+    http://xmpp.org/extensions/xep-0248.html
+    """
 
     def itemsReceived(self, event):
         if hasattr(self.parent, 'itemsReceived'):
@@ -252,7 +262,8 @@ class PubSubHandler(WokkelPubSubClient):
 
         def cb(result):
             subscriptions = result.pubsub.subscriptions.children
-            return [(JID(item['jid']), item['subscription']) for item in subscriptions]
+            return [(JID(item['jid']), item['subscription'])
+                    for item in subscriptions]
 
         def error(failure):
             # TODO: Handle gracefully?
