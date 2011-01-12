@@ -18,6 +18,42 @@ class PubSubCommandsProtocolTest(unittest.TestCase):
         self.protocol.xmlstream = self.stub.xmlstream
         self.protocol.connectionInitialized()
 
+    def test_getNodes(self):
+        d = self.protocol.getNodes(JID(u'pubsub.example.com'),
+                                   u'foo_node')
+        iq = self.stub.output[-1]
+        self.assertEqual(u'pubsub.example.com', iq.getAttribute(u'to'))
+        self.assertEqual(u'get', iq.getAttribute(u'type'))
+        self.failIf(iq.query is None)
+        self.assertEqual(protocols.NS_DISCO_ITEMS, iq.query.uri)
+        self.assertEqual(u'foo_node', iq.query.getAttribute(u'node'))
+        response = toResponse(iq, u'result')
+        response['to'] = \
+            self.protocol.xmlstream.factory.authenticator.jid.full()
+        raise NotImplementedError()
+        return d
+
+    def test_getSubscriptions(self):
+        raise NotImplementedError()
+
+    def test_setSubscriptions(self):
+        raise NotImplementedError()
+
+    def test_getNodeType(self):
+        raise NotImplementedError()
+
+    def test_getDefaultNodeConfiguration(self):
+        raise NotImplementedError()
+
+    def test_getNodeConfiguration(self):
+        raise NotImplementedError()
+
+    def test_configureNode(self):
+        raise NotImplementedError()
+
+    def test_associateNodeToCollection(self):
+        raise NotImplementedError()
+
     def test_getAffiliations(self):
         d = self.protocol.getAffiliations(JID(u'pubsub.example.com'),
                                           u'foo_node')
