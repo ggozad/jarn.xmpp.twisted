@@ -1,6 +1,5 @@
 from twisted.trial import unittest
 from twisted.words.protocols.jabber.jid import JID
-from twisted.words.protocols.jabber.xmlstream import toResponse
 from wokkel.test.helpers import XmlStreamStub
 
 from plone.messaging.twisted import protocols
@@ -45,3 +44,22 @@ class ChatCommandsProtocolTest(unittest.TestCase):
         self.assertEqual(protocols.XHTML_IM, html.uri)
         self.assertEqual(protocols.XHTML, html.body.uri)
         self.assertEqual([u'<p>Hello world</p>'], html.body.children)
+
+    def test_sendRosterItemAddSuggestion(self):
+        self.protocol.sendRosterItemAddSuggestion(
+            JID(u'joe@example.com/resource'),
+            [JID(u'bar@example.com/resource')],
+            group=u'Friends')
+        message = self.stub.output[-1]
+        self.assertEqual(u'message', message.name)
+        self.assertEqual(u'joe@example.com', message.getAttribute(u'to'))
+        self.assertEqual(u'user@example.com', message.getAttribute(u'from'))
+        self.failIf(message.x is None)
+        x = message.x
+        self.assertEqual(protocols.NS_ROSTER_X, x.uri)
+        self.failIf(x.item is None)
+        item = x.item
+        self.assertEqual(u'add', item.getAttribute(u'action'))
+        self.assertEqual(u'bar@example.com', item.getAttribute('jid'))
+        self.failIf(item.group is None)
+        self.assertEqual([u'Friends'], item.group.children)
