@@ -2,17 +2,9 @@ from twisted.trial import unittest
 from twisted.words.protocols.jabber.jid import JID
 from twisted.words.protocols.jabber.xmlstream import toResponse
 from wokkel.test.helpers import XmlStreamStub
-from wokkel import data_form
+
 from plone.messaging.twisted import protocols
-
-
-class FactoryWithJID(object):
-
-    class Object(object):
-        pass
-
-    authenticator = Object()
-    authenticator.jid = JID(u'user@example.com')
+from plone.messaging.twisted.testing import FactoryWithJID
 
 
 class PubSubCommandsProtocolTest(unittest.TestCase):
@@ -27,7 +19,8 @@ class PubSubCommandsProtocolTest(unittest.TestCase):
         self.protocol.connectionInitialized()
 
     def test_getAffiliations(self):
-        d = self.protocol.getAffiliations(JID(u'pubsub.example.com'), u'foo_node')
+        d = self.protocol.getAffiliations(JID(u'pubsub.example.com'),
+                                          u'foo_node')
         iq = self.stub.output[-1]
         self.assertEqual(u'pubsub.example.com', iq.getAttribute(u'to'))
         self.assertEqual(u'get', iq.getAttribute(u'type'))
@@ -37,7 +30,8 @@ class PubSubCommandsProtocolTest(unittest.TestCase):
         self.assertEqual('foo_node',
                          iq.pubsub.affiliations['node'])
         response = toResponse(iq, u'result')
-        response['to'] = self.protocol.xmlstream.factory.authenticator.jid.full()
+        response['to'] = \
+            self.protocol.xmlstream.factory.authenticator.jid.full()
         pubsub = response.addElement((protocols.NS_PUBSUB_OWNER, u'pubsub'))
 
         affiliations = pubsub.addElement(u'affiliations')
@@ -60,8 +54,7 @@ class PubSubCommandsProtocolTest(unittest.TestCase):
 
     def test_modifyAffiliations(self):
         d = self.protocol.modifyAffiliations(JID(u'pubsub.example.com'),
-                                             u'foo_node',
-                                             [(JID(u'foo@example.com'), 'none')])
+            u'foo_node', [(JID(u'foo@example.com'), 'none')])
         iq = self.stub.output[-1]
         self.assertEqual(u'pubsub.example.com', iq.getAttribute(u'to'))
         self.assertEqual(u'set', iq.getAttribute(u'type'))
@@ -75,7 +68,8 @@ class PubSubCommandsProtocolTest(unittest.TestCase):
         self.assertEqual('none', affiliation['affiliation'])
 
         response = toResponse(iq, u'result')
-        response['to'] = self.protocol.xmlstream.factory.authenticator.jid.full()
+        response['to'] = \
+            self.protocol.xmlstream.factory.authenticator.jid.full()
         self.stub.send(response)
 
         def cb(result):

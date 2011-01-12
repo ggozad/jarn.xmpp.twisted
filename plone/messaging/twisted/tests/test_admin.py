@@ -1,18 +1,10 @@
 from twisted.trial import unittest
-from twisted.words.protocols.jabber.jid import JID
 from twisted.words.protocols.jabber.xmlstream import toResponse
 from wokkel.test.helpers import XmlStreamStub
 from wokkel import data_form
+
 from plone.messaging.twisted import protocols
-
-
-class FactoryWithJID(object):
-
-    class Object(object):
-        pass
-
-    authenticator = Object()
-    authenticator.jid = JID(u'user@example.com')
+from plone.messaging.twisted.testing import FactoryWithJID
 
 
 class AdminCommandsProtocolTest(unittest.TestCase):
@@ -38,7 +30,8 @@ class AdminCommandsProtocolTest(unittest.TestCase):
                          iq.command.getAttribute('node'))
         self.assertEqual('execute', iq.command.getAttribute('action'))
         response = toResponse(iq, u'result')
-        response['to'] = self.protocol.xmlstream.factory.authenticator.jid.full()
+        response['to'] = \
+            self.protocol.xmlstream.factory.authenticator.jid.full()
         command = response.addElement((protocols.NS_COMMANDS, u'command'))
         command[u'node'] = protocols.NODE_ADMIN_ADD_USER
         command[u'status'] = u'executing'
@@ -52,7 +45,8 @@ class AdminCommandsProtocolTest(unittest.TestCase):
         password = data_form.Field(u'text-private',
                                    var=u'password', required=True)
         password_verify = data_form.Field(u'text-private',
-                                          var=u'password-verify', required=True)
+                                          var=u'password-verify',
+                                          required=True)
         form.addField(form_type)
         form.addField(userjid)
         form.addField(password)
@@ -63,7 +57,8 @@ class AdminCommandsProtocolTest(unittest.TestCase):
         iq = self.stub.output[-1]
         self.assertEqual(u'set', iq.getAttribute(u'type'))
         self.assertEqual(protocols.NS_COMMANDS, iq.command.uri)
-        self.assertEqual(protocols.NODE_ADMIN_ADD_USER, iq.command.getAttribute(u'node'))
+        self.assertEqual(protocols.NODE_ADMIN_ADD_USER,
+                         iq.command.getAttribute(u'node'))
         self.assertEqual(u'sid-0', iq.command.getAttribute(u'sessionid'))
         form = data_form.findForm(iq.command, protocols.NODE_ADMIN)
         self.assertEqual(u'submit', form.formType)
@@ -86,7 +81,8 @@ class AdminCommandsProtocolTest(unittest.TestCase):
                          iq.command.getAttribute('node'))
         self.assertEqual('execute', iq.command.getAttribute('action'))
         response = toResponse(iq, u'result')
-        response['to'] = self.protocol.xmlstream.factory.authenticator.jid.full()
+        response['to'] = \
+            self.protocol.xmlstream.factory.authenticator.jid.full()
         command = response.addElement((protocols.NS_COMMANDS, u'command'))
         command[u'node'] = protocols.NODE_ADMIN_DELETE_USER
         command[u'status'] = u'executing'
@@ -105,12 +101,14 @@ class AdminCommandsProtocolTest(unittest.TestCase):
         iq = self.stub.output[-1]
         self.assertEqual(u'set', iq.getAttribute(u'type'))
         self.assertEqual(protocols.NS_COMMANDS, iq.command.uri)
-        self.assertEqual(protocols.NODE_ADMIN_DELETE_USER, iq.command.getAttribute(u'node'))
+        self.assertEqual(protocols.NODE_ADMIN_DELETE_USER,
+                         iq.command.getAttribute(u'node'))
         self.assertEqual(u'sid-0', iq.command.getAttribute(u'sessionid'))
         form = data_form.findForm(iq.command, protocols.NODE_ADMIN)
         self.assertEqual(u'submit', form.formType)
         self.failUnless(u'accountjids' in form.fields)
-        self.assertEqual([u'joe@example.com'], form.fields['accountjids'].values)
+        self.assertEqual([u'joe@example.com'],
+                         form.fields['accountjids'].values)
 
     def test_sendAnnouncement(self):
         self.protocol.sendAnnouncement(u'Hello world')
@@ -125,7 +123,8 @@ class AdminCommandsProtocolTest(unittest.TestCase):
         self.assertEqual('execute', iq.command.getAttribute('action'))
 
         response = toResponse(iq, u'result')
-        response['to'] = self.protocol.xmlstream.factory.authenticator.jid.full()
+        response['to'] = \
+            self.protocol.xmlstream.factory.authenticator.jid.full()
         command = response.addElement((protocols.NS_COMMANDS, u'command'))
         command[u'node'] = protocols.NODE_ADMIN_ANNOUNCE
         command[u'status'] = u'executing'
