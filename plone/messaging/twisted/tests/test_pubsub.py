@@ -56,13 +56,94 @@ class PubSubCommandsProtocolTest(unittest.TestCase):
         return d
 
     def test_getSubscriptions(self):
-        raise NotImplementedError()
+        d = self.protocol.getSubscriptions(JID(u'pubsub.example.com'),
+                                           u'foo_node')
+        iq = self.stub.output[-1]
+        self.assertEqual(u'pubsub.example.com', iq.getAttribute(u'to'))
+        self.assertEqual(u'get', iq.getAttribute(u'type'))
+        self.failIf(iq.pubsub is None)
+        self.assertEqual(protocols.NS_PUBSUB_OWNER, iq.pubsub.uri)
+        self.failIf(iq.pubsub.subscriptions is None)
+        self.assertEqual(u'foo_node',
+                         iq.pubsub.subscriptions.getAttribute(u'node'))
+        response = toResponse(iq, u'result')
+        response.addElement((protocols.NS_PUBSUB_OWNER, u'pubsub'))
+        subscriptions = response.pubsub.addElement(u'subscriptions')
+        subscriptions[u'node'] = u'foo_node'
+        subscription1 = subscriptions.addElement(u'subscription')
+        subscription1[u'jid'] = u'foo@example.com'
+        subscription1[u'subscription'] = u'unconfigured'
+        subscription2 = subscriptions.addElement(u'subscription')
+        subscription2[u'jid'] = u'bar@example.com'
+        subscription2[u'subscription'] = u'subscribed'
+        subscription2[u'subid'] = u'123-abc'
+
+        self.stub.send(response)
+
+        def cb(result):
+            self.assertEqual(
+                [(JID(u'foo@example.com'), u'unconfigured'),
+                 (JID(u'bar@example.com'), u'subscribed')],
+                 result)
+
+        d.addCallback(cb)
+        return d
 
     def test_setSubscriptions(self):
-        raise NotImplementedError()
+        d = self.protocol.setSubscriptions(
+            JID(u'pubsub.example.com'),
+            u'foo_node',
+            [(JID(u'foo@example.com'), u'subscribed'),
+             (JID(u'bar@example.com'), u'none')])
+
+        iq = self.stub.output[-1]
+        self.assertEqual(u'pubsub.example.com', iq.getAttribute(u'to'))
+        self.assertEqual(u'set', iq.getAttribute(u'type'))
+        self.failIf(iq.pubsub is None)
+        self.assertEqual(protocols.NS_PUBSUB_OWNER, iq.pubsub.uri)
+        self.failIf(iq.pubsub.subscriptions is None)
+        self.assertEqual(u'foo_node',
+                         iq.pubsub.subscriptions.getAttribute(u'node'))
+        subscriptions = iq.pubsub.subscriptions.children
+        self.assertEqual(2, len(subscriptions))
+        self.assertEqual(u'foo@example.com', subscriptions[0]['jid'])
+        self.assertEqual(u'subscribed', subscriptions[0]['subscription'])
+        self.assertEqual(u'bar@example.com', subscriptions[1]['jid'])
+        self.assertEqual(u'none', subscriptions[1]['subscription'])
+
+        response = toResponse(iq, u'result')
+        self.stub.send(response)
+
+        def cb(result):
+            self.assertEqual(True, result)
+
+        d.addCallback(cb)
+        return d
 
     def test_getNodeType(self):
-        raise NotImplementedError()
+        d = self.protocol.getNodeType(JID(u'pubsub.example.com'),
+                                      u'foo_node')
+        iq = self.stub.output[-1]
+        self.assertEqual(u'pubsub.example.com', iq.getAttribute(u'to'))
+        self.assertEqual(u'get', iq.getAttribute(u'type'))
+        self.failIf(iq.query is None)
+        self.assertEqual(protocols.NS_DISCO_INFO, iq.query.uri)
+        self.assertEqual(u'foo_node', iq.query['node'])
+
+        response = toResponse(iq, u'result')
+        query = response.addElement((protocols.NS_DISCO_INFO, u'query'))
+        query[u'node'] = u'foo_node'
+        identity = query.addElement(u'identity')
+        identity[u'category'] = u'pubsub'
+        identity[u'type'] = u'collection'
+
+        self.stub.send(response)
+
+        def cb(result):
+            self.assertEqual(u'collection', result)
+
+        d.addCallback(cb)
+        return d
 
     def test_getDefaultNodeConfiguration(self):
         raise NotImplementedError()
