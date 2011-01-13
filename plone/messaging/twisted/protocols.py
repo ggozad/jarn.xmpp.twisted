@@ -405,8 +405,8 @@ class PubSubHandler(WokkelPubSubClient):
         d.addCallbacks(cb, error)
         return d
 
-    def associateNodeToCollection(self, service,
-                                  nodeIdentifier, collectionIdentifier):
+    def associateNodeWithCollection(self, service,
+                                    nodeIdentifier, collectionIdentifier):
         """ XXX: Not supported by ejabberd
         """
 

@@ -1,7 +1,7 @@
 from twisted.trial import unittest
 from twisted.words.protocols.jabber.jid import JID
 from twisted.words.protocols.jabber.xmlstream import toResponse
-from wokkel.data_form import NS_X_DATA
+from wokkel import data_form
 from wokkel.test.helpers import XmlStreamStub
 
 from plone.messaging.twisted import protocols
@@ -67,6 +67,8 @@ class PubSubCommandsProtocolTest(unittest.TestCase):
         self.assertEqual(u'foo_node',
                          iq.pubsub.subscriptions.getAttribute(u'node'))
         response = toResponse(iq, u'result')
+        response['to'] = \
+            self.protocol.xmlstream.factory.authenticator.jid.full()
         response.addElement((protocols.NS_PUBSUB_OWNER, u'pubsub'))
         subscriptions = response.pubsub.addElement(u'subscriptions')
         subscriptions[u'node'] = u'foo_node'
@@ -112,6 +114,8 @@ class PubSubCommandsProtocolTest(unittest.TestCase):
         self.assertEqual(u'none', subscriptions[1]['subscription'])
 
         response = toResponse(iq, u'result')
+        response['to'] = \
+            self.protocol.xmlstream.factory.authenticator.jid.full()
         self.stub.send(response)
 
         def cb(result):
@@ -131,6 +135,8 @@ class PubSubCommandsProtocolTest(unittest.TestCase):
         self.assertEqual(u'foo_node', iq.query['node'])
 
         response = toResponse(iq, u'result')
+        response['to'] = \
+            self.protocol.xmlstream.factory.authenticator.jid.full()
         query = response.addElement((protocols.NS_DISCO_INFO, u'query'))
         query[u'node'] = u'foo_node'
         identity = query.addElement(u'identity')
@@ -146,10 +152,89 @@ class PubSubCommandsProtocolTest(unittest.TestCase):
         return d
 
     def test_getDefaultNodeConfiguration(self):
-        raise NotImplementedError()
+        d = self.protocol.getDefaultNodeConfiguration(
+            JID(u'pubsub.example.com'))
+        iq = self.stub.output[-1]
+        self.assertEqual(u'pubsub.example.com', iq.getAttribute(u'to'))
+        self.assertEqual(u'get', iq.getAttribute(u'type'))
+        self.failIf(iq.pubsub is None)
+        self.assertEqual(protocols.NS_PUBSUB_OWNER, iq.pubsub.uri)
+        self.failIf(iq.pubsub.default is None)
+
+        response = toResponse(iq, u'result')
+        response['to'] = \
+            self.protocol.xmlstream.factory.authenticator.jid.full()
+        pubsub = response.addElement((protocols.NS_PUBSUB_OWNER, u'pubsub'))
+        default = pubsub.addElement(u'default')
+        form = data_form.Form(u'form')
+        form_type = data_form.Field(u'hidden',
+                                    var=u'FORM_TYPE',
+                                    value=protocols.NS_PUBSUB_NODE_CONFIG)
+        form_title = data_form.Field(u'text-single',
+                                     var=u'pubsub#title',
+                                     label=u'A friendly name for the node')
+        field_subscr = data_form.Field(u'boolean',
+                                       var=u'pubsub#subscribe',
+                                       label=u'Whether to allow subscriptions',
+                                       value=u'1')
+        form.addField(form_type)
+        form.addField(form_title)
+        form.addField(field_subscr)
+        default.addContent(form.toElement())
+        self.stub.send(response)
+
+        def cb(result):
+            self.assertEqual(
+                {u'pubsub#subscribe': u'true',
+                 u'pubsub#title': None},
+                result)
+
+        d.addCallback(cb)
+        return d
 
     def test_getNodeConfiguration(self):
-        raise NotImplementedError()
+        d = self.protocol.getNodeConfiguration(
+            JID(u'pubsub.example.com'), u'foo_node')
+        iq = self.stub.output[-1]
+        self.assertEqual(u'pubsub.example.com', iq.getAttribute(u'to'))
+        self.assertEqual(u'get', iq.getAttribute(u'type'))
+        self.failIf(iq.pubsub is None)
+        self.assertEqual(protocols.NS_PUBSUB_OWNER, iq.pubsub.uri)
+        self.failIf(iq.pubsub.configure is None)
+        self.assertEqual(u'foo_node', iq.pubsub.configure[u'node'])
+
+        response = toResponse(iq, u'result')
+        response['to'] = \
+            self.protocol.xmlstream.factory.authenticator.jid.full()
+        pubsub = response.addElement((protocols.NS_PUBSUB_OWNER, u'pubsub'))
+        configure = pubsub.addElement(u'configure')
+        form = data_form.Form(u'form')
+        form_type = data_form.Field(u'hidden',
+                                    var=u'FORM_TYPE',
+                                    value=protocols.NS_PUBSUB_NODE_CONFIG)
+        form_title = data_form.Field(u'text-single',
+                                     var=u'pubsub#title',
+                                     label=u'A friendly name for the node')
+
+        field_subscr = data_form.Field(u'boolean',
+                                       var=u'pubsub#subscribe',
+                                       label=u'Whether to allow subscriptions',
+                                       value=u'1')
+        form.addField(form_type)
+        form.addField(form_title)
+        form.addField(field_subscr)
+        configure.addContent(form.toElement())
+
+        self.stub.send(response)
+
+        def cb(result):
+            self.assertEqual(
+                {u'pubsub#subscribe': u'true',
+                 u'pubsub#title': None},
+                result)
+
+        d.addCallback(cb)
+        return d
 
     def test_configureNode(self):
         d = self.protocol.configureNode(JID(u'pubsub.example.com'),
@@ -165,7 +250,7 @@ class PubSubCommandsProtocolTest(unittest.TestCase):
                          iq.pubsub.configure.getAttribute(u'node'))
         self.failIf(iq.pubsub.configure.x is None)
         x = iq.pubsub.configure.x
-        self.assertEqual(NS_X_DATA, x.uri)
+        self.assertEqual(data_form.NS_X_DATA, x.uri)
         self.assertEqual(u'submit', x.getAttribute('type'))
         self.assertEqual(2, len(x.children))
         fields = x.children
@@ -188,7 +273,33 @@ class PubSubCommandsProtocolTest(unittest.TestCase):
         return d
 
     def test_associateNodeToCollection(self):
-        raise NotImplementedError()
+        d = self.protocol.associateNodeWithCollection(
+            JID(u'pubsub.example.com'),
+            u'foo_node',
+            u'collection_node')
+        iq = self.stub.output[-1]
+        self.assertEqual(u'pubsub.example.com', iq.getAttribute(u'to'))
+        self.assertEqual(u'set', iq.getAttribute(u'type'))
+        self.failIf(iq.pubsub is None)
+        self.assertEqual(protocols.NS_PUBSUB_OWNER, iq.pubsub.uri)
+        self.failIf(iq.pubsub.collection is None)
+        self.assertEqual('collection_node',
+                         iq.pubsub.collection['node'])
+        self.failIf(iq.pubsub.collection.associate is None)
+        self.assertEqual('foo_node',
+                         iq.pubsub.collection.associate['node'])
+
+        response = toResponse(iq, u'result')
+        response['to'] = \
+         self.protocol.xmlstream.factory.authenticator.jid.full()
+
+        self.stub.send(response)
+
+        def cb(result):
+            self.assertEqual(True, result)
+
+        d.addCallback(cb)
+        return d
 
     def test_getAffiliations(self):
         d = self.protocol.getAffiliations(JID(u'pubsub.example.com'),
