@@ -31,7 +31,28 @@ class PubSubCommandsProtocolTest(unittest.TestCase):
         response = toResponse(iq, u'result')
         response['to'] = \
             self.protocol.xmlstream.factory.authenticator.jid.full()
-        raise NotImplementedError()
+        query = response.addElement((protocols.NS_DISCO_ITEMS, u'query'))
+        query[u'node'] = u'foo_node'
+        child1 = query.addElement('item')
+        child1['node'] = 'foodoo_child_1'
+        child1['name'] = 'Foodoo child one'
+        child1['jid'] = u'pubsub.example.com'
+        child2 = query.addElement('item')
+        child2['node'] = 'foodoo_child_2'
+        child2['jid'] = u'pubsub.example.com'
+
+        self.stub.send(response)
+
+        def cb(result):
+            self.assertEqual(
+                [{'node': 'foodoo_child_1',
+                  'jid': u'pubsub.example.com',
+                  'name': 'Foodoo child one'},
+                 {'node': 'foodoo_child_2',
+                  'jid': u'pubsub.example.com'}],
+                 result)
+
+        d.addCallback(cb)
         return d
 
     def test_getSubscriptions(self):
