@@ -8,8 +8,8 @@ from twisted.words.protocols.jabber.xmlstream import IQ
 from wokkel.pubsub import PubSubClient as WokkelPubSubClient
 from wokkel.subprotocols import XMPPHandler
 from wokkel import data_form
-from wokkel.pubsub import NS_PUBSUB_OWNER, NS_PUBSUB_NODE_CONFIG
 from wokkel.disco import NS_DISCO_INFO, NS_DISCO_ITEMS
+from wokkel.pubsub import NS_PUBSUB_OWNER, NS_PUBSUB_NODE_CONFIG
 
 NS_CLIENT = 'jabber:client'
 NS_ROSTER_X = 'http://jabber.org/protocol/rosterx'

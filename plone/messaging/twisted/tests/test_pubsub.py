@@ -1,6 +1,7 @@
 from twisted.trial import unittest
 from twisted.words.protocols.jabber.jid import JID
 from twisted.words.protocols.jabber.xmlstream import toResponse
+from wokkel.data_form import NS_X_DATA
 from wokkel.test.helpers import XmlStreamStub
 
 from plone.messaging.twisted import protocols
@@ -49,7 +50,40 @@ class PubSubCommandsProtocolTest(unittest.TestCase):
         raise NotImplementedError()
 
     def test_configureNode(self):
-        raise NotImplementedError()
+        d = self.protocol.configureNode(JID(u'pubsub.example.com'),
+                                        u'foo_node',
+                                        {u'pubsub#collection': u'bar_node'})
+        iq = self.stub.output[-1]
+        self.assertEqual(u'pubsub.example.com', iq.getAttribute(u'to'))
+        self.assertEqual(u'set', iq.getAttribute(u'type'))
+        self.failIf(iq.pubsub is None)
+        self.assertEqual(protocols.NS_PUBSUB_OWNER, iq.pubsub.uri)
+        self.failIf(iq.pubsub.configure is None)
+        self.assertEqual(u'foo_node',
+                         iq.pubsub.configure.getAttribute(u'node'))
+        self.failIf(iq.pubsub.configure.x is None)
+        x = iq.pubsub.configure.x
+        self.assertEqual(NS_X_DATA, x.uri)
+        self.assertEqual(u'submit', x.getAttribute('type'))
+        self.assertEqual(2, len(x.children))
+        fields = x.children
+        self.failIf(fields[0].value is None)
+        self.assertEqual([protocols.NS_PUBSUB_NODE_CONFIG],
+                         fields[0].value.children)
+        self.assertEqual(u'pubsub#collection', fields[1].getAttribute(u'var'))
+        self.failIf(fields[1].value is None)
+        self.assertEqual([u'bar_node'], fields[1].value.children)
+        self.assertEqual(fields[0].value.children,
+            [protocols.NS_PUBSUB_NODE_CONFIG])
+
+        response = toResponse(iq, u'result')
+        self.stub.send(response)
+
+        def cb(result):
+            self.assertEqual(True, result)
+
+        d.addCallback(cb)
+        return d
 
     def test_associateNodeToCollection(self):
         raise NotImplementedError()
