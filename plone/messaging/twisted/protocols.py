@@ -238,6 +238,36 @@ class PubSubHandler(WokkelPubSubClient):
         if hasattr(self.parent, 'itemsReceived'):
             self.parent.itemsReceived(event)
 
+    def createNode(self, service, nodeIdentifier, options=None):
+        def cb(result):
+            logger.info("Created node %s." % nodeIdentifier)
+            return True
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return False
+
+        d = super(PubSubHandler, self).createNode(service,
+                                                  nodeIdentifier,
+                                                  options)
+        d.addCallbacks(cb, error)
+        return d
+
+    def deleteNode(self, service, nodeIdentifier):
+        def cb(result):
+            logger.info("Deleted node %s." % nodeIdentifier)
+            return True
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return False
+
+        d = super(PubSubHandler, self).deleteNode(service, nodeIdentifier)
+        d.addCallbacks(cb, error)
+        return d
+
     def getNodes(self, service, nodeIdentifier=None):
 
         def cb(result):
