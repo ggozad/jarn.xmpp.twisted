@@ -95,8 +95,7 @@ class AdminHandler(XMPPHandler):
         """
 
         def resultReceived(iq):
-            logger.info("%s: Added user %s" % \
-                (self.xmlstream.factory.authenticator.jid.full(), userjid))
+            logger.info("Added user %s" % userjid)
             return True
 
         def formReceived(iq):
@@ -141,8 +140,7 @@ class AdminHandler(XMPPHandler):
         """
 
         def resultReceived(iq):
-            logger.info("%s: Deleted users %s" % \
-                (self.xmlstream.factory.authenticator.jid.full(), userjids))
+            logger.info("Deleted users %s" % userjids)
             return True
 
         def formReceived(iq):
@@ -187,6 +185,7 @@ class AdminHandler(XMPPHandler):
         """
 
         def resultReceived(iq):
+            logger.info("Sent announcement %s." % body)
             return True
 
         def formReceived(iq):
@@ -235,6 +234,7 @@ class PubSubHandler(WokkelPubSubClient):
     """
 
     def itemsReceived(self, event):
+        logger.info("Items received. %s." % event.items)
         if hasattr(self.parent, 'itemsReceived'):
             self.parent.itemsReceived(event)
 
@@ -242,7 +242,9 @@ class PubSubHandler(WokkelPubSubClient):
 
         def cb(result):
             items = result.query.children
-            return [item.attributes for item in items]
+            result = [item.attributes for item in items]
+            logger.info("Got nodes of %s: %s ." % (nodeIdentifier, result))
+            return result
 
         def error(failure):
             # TODO: Handle gracefully?
@@ -262,8 +264,11 @@ class PubSubHandler(WokkelPubSubClient):
 
         def cb(result):
             subscriptions = result.pubsub.subscriptions.children
-            return [(JID(item['jid']), item['subscription'])
-                    for item in subscriptions]
+            result = [(JID(item['jid']), item['subscription'])
+                     for item in subscriptions]
+            logger.info("Got subscriptions for %s: %s ." % \
+                (nodeIdentifier, result))
+            return result
 
         def error(failure):
             # TODO: Handle gracefully?
@@ -283,6 +288,8 @@ class PubSubHandler(WokkelPubSubClient):
 
         def cb(result):
             if result['type']==u'result':
+                logger.info("Set subscriptions for %s: %s ." % \
+                    (nodeIdentifier, delta))
                 return True
             return False
 
@@ -308,7 +315,9 @@ class PubSubHandler(WokkelPubSubClient):
     def getNodeType(self, service, nodeIdentifier):
 
         def cb(result):
-            return result.query.identity['type']
+            result = result.query.identity['type']
+            logger.info("Got node type for %s: %s ." % (nodeIdentifier, result))
+            return result
 
         def error(failure):
             # TODO: Handle gracefully?
@@ -337,6 +346,7 @@ class PubSubHandler(WokkelPubSubClient):
                 except (AttributeError, IndexError):
                     pass
                 result[field['var']] = value
+            logger.info("Got default node configuration: %s ." % result)
             return result
 
         def error(failure):
@@ -352,7 +362,7 @@ class PubSubHandler(WokkelPubSubClient):
         d.addCallbacks(cb, error)
         return d
 
-    def getNodeConfiguration(self, service, node):
+    def getNodeConfiguration(self, service, nodeIdentifier):
 
         def cb(result):
             fields = [field
@@ -366,6 +376,7 @@ class PubSubHandler(WokkelPubSubClient):
                 except (AttributeError, IndexError):
                     pass
                 result[field['var']] = value
+            logger.info("Got node configuration for %s: %s ." % (nodeIdentifier, result))
             return result
 
         def error(failure):
@@ -377,14 +388,15 @@ class PubSubHandler(WokkelPubSubClient):
         iq['to'] = service.full()
         pubsub = iq.addElement((NS_PUBSUB_OWNER, 'pubsub'))
         configure = pubsub.addElement('configure')
-        configure['node'] = node
+        configure['node'] = nodeIdentifier
         d = iq.send()
         d.addCallbacks(cb, error)
         return d
 
-    def configureNode(self, service, node, options):
+    def configureNode(self, service, nodeIdentifier, options):
 
         def cb(result):
+            logger.info("Configured %s: %s ." % (nodeIdentifier, options))
             return True
 
         def error(failure):
@@ -399,7 +411,7 @@ class PubSubHandler(WokkelPubSubClient):
         iq['to'] = service.full()
         pubsub = iq.addElement((NS_PUBSUB_OWNER, 'pubsub'))
         configure = pubsub.addElement('configure')
-        configure['node'] = node
+        configure['node'] = nodeIdentifier
         configure = configure.addChild(form.toElement())
         d = iq.send()
         d.addCallbacks(cb, error)
@@ -432,11 +444,13 @@ class PubSubHandler(WokkelPubSubClient):
     def getAffiliations(self, service, nodeIdentifier):
 
         def cb(result):
-            res = []
             affiliations = result.pubsub.affiliations
+            result = []
             for affiliate in affiliations.children:
-                res.append((JID(affiliate['jid']), affiliate['affiliation'], ))
-            return res
+                result.append((JID(affiliate['jid']), affiliate['affiliation'], ))
+            logger.info("Got affiliations for %s: %s ." % \
+                (nodeIdentifier, result))
+            return result
 
         def error(failure):
             # TODO: Handle gracefully?
@@ -456,6 +470,8 @@ class PubSubHandler(WokkelPubSubClient):
 
         def cb(result):
             if result['type']==u'result':
+                logger.info("Modified affiliations for %s: %s ." % \
+                    (nodeIdentifier, delta))
                 return True
             return False
 
