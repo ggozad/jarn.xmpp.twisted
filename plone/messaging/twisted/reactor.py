@@ -15,7 +15,7 @@ class ZopeReactor(object):
 
     def __init__(self,
                  reactor_factory=twisted.internet.selectreactor.SelectReactor,
-                 poll_interval=0):
+                 poll_interval=1):
 
         self.reactor = reactor_factory()
         self.poll_interval = poll_interval
@@ -49,5 +49,5 @@ class ZopeReactor(object):
             self.reactor.callLater(self.poll_interval, self.reactorPoll)
 
     def reactorPoll(self):
-        logger.info("Twisted poll")
+        #logger.info("Twisted poll")
         self.reactor.callLater(self.poll_interval, self.reactorPoll)
