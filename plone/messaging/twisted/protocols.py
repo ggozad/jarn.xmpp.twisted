@@ -233,6 +233,21 @@ class PubSubHandler(WokkelPubSubClient):
     http://xmpp.org/extensions/xep-0248.html
     """
 
+    def publish(self, service, nodeIdentifier, items=[]):
+        def cb(result):
+            logger.info("Published to node %s." % nodeIdentifier)
+            return True
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return False
+
+
+        d = super(PubSubHandler, self).publish(service, nodeIdentifier, items)
+        d.addCallbacks(cb, error)
+        return d
+
     def itemsReceived(self, event):
         logger.info("Items received. %s." % event.items)
         if hasattr(self.parent, 'itemsReceived'):
@@ -247,10 +262,9 @@ class PubSubHandler(WokkelPubSubClient):
             # TODO: Handle gracefully?
             logger.error(failure.getTraceback())
             return False
-
         d = super(PubSubHandler, self).createNode(service,
-                                                  nodeIdentifier,
-                                                  options)
+                                                  nodeIdentifier=nodeIdentifier,
+                                                  options=options)
         d.addCallbacks(cb, error)
         return d
 
