@@ -27,11 +27,12 @@ class ZopeReactor(object):
 
         def run_reactor():
             logger.info("Starting Twisted reactor...")
+            self.reactor.callWhenRunning(self.reactorStarted)
             self.reactor.run(installSignalHandlers=0)
+
         self.thread = threading.Thread(target=run_reactor)
         self.thread.setDaemon(True)
         self.thread.start()
-        self.reactor.callWhenRunning(self.reactorStarted)
 
     def stop(self):
         if not self.reactor.running:
