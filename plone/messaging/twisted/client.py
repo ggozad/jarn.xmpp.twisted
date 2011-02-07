@@ -3,7 +3,7 @@ import string
 import logging
 
 from zope.interface import implements
-from zope.component import queryUtility
+from zope.component import getUtility
 from wokkel import client
 from wokkel.subprotocols import StreamManager
 
@@ -51,10 +51,9 @@ class DeferredXMPPClient(object):
         else:
             d.addErrback(defaultErrBack)
 
-        zr = queryUtility(IZopeReactor)
-        if zr:
-            zr.reactor.callFromThread(zr.reactor.connectTCP,
-                                      "localhost", 5222, factory)
+        zr = getUtility(IZopeReactor)
+        zr.reactor.callFromThread(zr.reactor.connectTCP,
+                                  "localhost", 5222, factory)
         return d
 
 
@@ -67,24 +66,28 @@ class XMPPClient(StreamManager):
                  host='localhost', port=5222):
 
         jid.resource=randomResource()
+
         self.jid = jid
         self.domain = jid.host
         self.host = host
         self.port = port
+        self._state = None
 
         factory = client.HybridClientFactory(jid, password)
 
+        # Setup StreamManager
         StreamManager.__init__(self, factory)
-
         for handler in extra_handlers:
             handler.setHandlerParent(self)
 
-        zr = queryUtility(IZopeReactor)
-        if zr:
-            zr.reactor.callFromThread(zr.reactor.connectTCP,
-                self.host, self.port, self.factory)
-        else: # When testing there is no zope reactor. Just a normal one ;)
-            raise NotImplementedError
+        zr = getUtility(IZopeReactor)
+        zr.reactor.callFromThread(zr.reactor.connectTCP,
+                                  self.host, self.port, self.factory)
+        self._state = u'connecting'
+
+    @property
+    def state(self):
+        return self._state
 
     def _authd(self, xs):
         """
@@ -96,3 +99,12 @@ class XMPPClient(StreamManager):
         """
         self.jid = self.factory.authenticator.jid
         StreamManager._authd(self, xs)
+        self._state = u'authenticated'
+
+    def _connected(self, xs):
+        self._state = u'connected'
+        super(XMPPClient, self)._connected(xs)
+
+    def _disconnected(self, _):
+        self._state = u'disconnected'
+        super(XMPPClient, self)._disconnected(_)
