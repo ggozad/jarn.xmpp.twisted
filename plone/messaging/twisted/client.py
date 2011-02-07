@@ -72,6 +72,7 @@ class XMPPClient(StreamManager):
         self.host = host
         self.port = port
         self._state = None
+        self._connector = None
 
         factory = client.HybridClientFactory(jid, password)
 
@@ -81,22 +82,23 @@ class XMPPClient(StreamManager):
             handler.setHandlerParent(self)
 
         zr = getUtility(IZopeReactor)
-        zr.reactor.callFromThread(zr.reactor.connectTCP,
-                                  self.host, self.port, self.factory)
+        zr.reactor.callFromThread(self.connect)
         self._state = u'connecting'
+
+    def connect(self):
+        zr = getUtility(IZopeReactor)
+        self._connector = zr.reactor.connectTCP(self.host, self.port, self.factory)
+
+    def disconnect(self):
+        self._connector.disconnect()
 
     @property
     def state(self):
         return self._state
 
     def _authd(self, xs):
-        """
-        Called when the stream has been initialized.
-
-        Save the JID that we were assigned by the server, as the resource might
-        differ from the JID we asked for. This is stored on the authenticator
-        by its constituent initializers.
-        """
+        #Save the JID that we were assigned by the server, as the resource might
+        #differ from the JID we asked for.
         self.jid = self.factory.authenticator.jid
         StreamManager._authd(self, xs)
         self._state = u'authenticated'
