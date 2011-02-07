@@ -1,10 +1,11 @@
-import threading
 import logging
-from zope.interface import implements
-from zope.event import notify
-import  twisted.internet.selectreactor
+import threading
+
 from plone.messaging.twisted.interfaces import IZopeReactor
 from plone.messaging.twisted.interfaces import ReactorStarted, ReactorStoped
+import  twisted.internet.selectreactor
+from zope.event import notify
+from zope.interface import implements
 
 logger = logging.getLogger('plone.messaging.twisted')
 
@@ -16,7 +17,6 @@ class ZopeReactor(object):
     def __init__(self,
                  reactor_factory=twisted.internet.selectreactor.SelectReactor,
                  poll_interval=1):
-
         self.reactor = reactor_factory()
         self.poll_interval = poll_interval
         self.start()
