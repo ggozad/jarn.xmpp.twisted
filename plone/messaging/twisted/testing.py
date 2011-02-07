@@ -1,8 +1,28 @@
+import time
+
 from plone.app.testing import IntegrationTesting, FunctionalTesting
 from plone.app.testing import PloneSandboxLayer
 from plone.app.testing import PLONE_FIXTURE
 from twisted.words.protocols.jabber.jid import JID
 from zope.configuration import xmlconfig
+
+
+def wait_on_deferred(d, seconds=10):
+    for i in range(seconds*10):
+        if d.called:
+            return True
+        time.sleep(0.1)
+    else:
+        assert False, 'Deferred never completed.'
+
+
+def wait_for_connection(c, seconds=10.0):
+    for i in range(seconds*10):
+        if c.state == u'authenticated':
+            return True
+        time.sleep(0.1)
+    else:
+        assert False, 'Client never authenticated.'
 
 
 class FactoryWithJID(object):
@@ -22,7 +42,23 @@ class ReactorFixture(PloneSandboxLayer):
         import plone.messaging.twisted
         xmlconfig.file('configure.zcml', plone.messaging.twisted,
                        context=configurationContext)
+        xmlconfig.file('reactor.zcml', plone.messaging.twisted,
+                      context=configurationContext)
 
+    def tearDownPloneSite(self, app):
+        from zope.component import getUtility
+        from plone.messaging.twisted.interfaces import IZopeReactor
+        zr = getUtility(IZopeReactor)
+        for dc in zr.reactor.getDelayedCalls():
+            if not dc.cancelled:
+                dc.cancel()
+        zr.stop()
+
+        from twisted.internet import reactor
+        reactor.disconnectAll()
+        for dc in reactor.getDelayedCalls():
+            if not dc.cancelled:
+                dc.cancel()
 
 REACTOR_FIXTURE = ReactorFixture()
 
