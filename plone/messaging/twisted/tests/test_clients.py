@@ -4,14 +4,12 @@ import unittest2 as unittest
 #from twisted.trial import unittest
 from twisted.words.protocols.jabber.jid import JID
 from twisted.words.protocols.jabber.xmlstream import IQ
-from zope.component import getUtility
 
 from plone.messaging.twisted.client import DeferredXMPPClient
 from plone.messaging.twisted.client import XMPPClient
-from plone.messaging.twisted.interfaces import IZopeReactor
 from plone.messaging.twisted.testing import REACTOR_INTEGRATION_TESTING
 from plone.messaging.twisted.testing import wait_on_deferred
-from plone.messaging.twisted.testing import wait_for_connection
+from plone.messaging.twisted.testing import wait_for_client_state
 
 NS_VERSION = 'jabber:iq:version'
 
@@ -43,7 +41,7 @@ class ClientNetworkTest(unittest.TestCase):
             return d
 
         client = XMPPClient(JID('admin@localhost'), 'admin')
-        self.assertTrue(wait_for_connection(client))
+        self.assertTrue(wait_for_client_state(client, 'authenticated'))
         d = getVersion(client.xmlstream)
         self.assertTrue(wait_on_deferred(d))
         self.assertEqual(d.result['type'], 'result')
