@@ -5,6 +5,9 @@ from plone.app.testing import PloneSandboxLayer
 from plone.app.testing import PLONE_FIXTURE
 from twisted.words.protocols.jabber.jid import JID
 from zope.configuration import xmlconfig
+from zope.component import getUtility
+
+from plone.messaging.twisted.interfaces import IZopeReactor
 
 
 def wait_on_deferred(d, seconds=10):
@@ -45,20 +48,25 @@ class ReactorFixture(PloneSandboxLayer):
         xmlconfig.file('reactor.zcml', plone.messaging.twisted,
                       context=configurationContext)
 
-    def tearDownPloneSite(self, app):
-        from zope.component import getUtility
-        from plone.messaging.twisted.interfaces import IZopeReactor
+    def testSetUp(self):
+        zr = getUtility(IZopeReactor)
+        zr.start()
+
+    def testTearDown(self):
+        # Clean ZopeReactor
         zr = getUtility(IZopeReactor)
         for dc in zr.reactor.getDelayedCalls():
             if not dc.cancelled:
                 dc.cancel()
         zr.stop()
 
+        #Clean normal reactor for the twisted unit tests.
         from twisted.internet import reactor
         reactor.disconnectAll()
         for dc in reactor.getDelayedCalls():
             if not dc.cancelled:
                 dc.cancel()
+
 
 REACTOR_FIXTURE = ReactorFixture()
 
