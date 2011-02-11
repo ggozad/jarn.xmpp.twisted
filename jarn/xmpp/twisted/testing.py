@@ -7,7 +7,7 @@ from twisted.words.protocols.jabber.jid import JID
 from zope.configuration import xmlconfig
 from zope.component import getUtility
 
-from plone.messaging.twisted.interfaces import IZopeReactor
+from jarn.xmpp.twisted.interfaces import IZopeReactor
 
 
 def wait_on_deferred(d, seconds=10):
@@ -42,10 +42,10 @@ class ReactorFixture(PloneSandboxLayer):
     defaultBases = (PLONE_FIXTURE, )
 
     def setUpZope(self, app, configurationContext):
-        import plone.messaging.twisted
-        xmlconfig.file('configure.zcml', plone.messaging.twisted,
+        import jarn.xmpp.twisted
+        xmlconfig.file('configure.zcml', jarn.xmpp.twisted,
                        context=configurationContext)
-        xmlconfig.file('reactor.zcml', plone.messaging.twisted,
+        xmlconfig.file('reactor.zcml', jarn.xmpp.twisted,
                       context=configurationContext)
 
     def testSetUp(self):

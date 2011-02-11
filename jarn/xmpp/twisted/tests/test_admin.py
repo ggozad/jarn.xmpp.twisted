@@ -3,8 +3,8 @@ from twisted.words.protocols.jabber.xmlstream import toResponse
 from wokkel.test.helpers import XmlStreamStub
 from wokkel import data_form
 
-from plone.messaging.twisted import protocols
-from plone.messaging.twisted.testing import FactoryWithJID
+from jarn.xmpp.twisted import protocols
+from jarn.xmpp.twisted.testing import FactoryWithJID
 
 
 class AdminCommandsProtocolTest(unittest.TestCase):

@@ -3,9 +3,9 @@ import os
 
 version = '0.1'
 
-setup(name='plone.messaging.twisted',
+setup(name='jarn.xmpp.twisted',
       version=version,
-      description="Zope/Twisted integration",
+      description="Zope/Twisted integration for jarn.xmpp packages",
       long_description=open("README.txt").read() + "\n" +
                        open(os.path.join("docs", "HISTORY.txt")).read(),
       # Get more strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
@@ -16,17 +16,16 @@ setup(name='plone.messaging.twisted',
       keywords='',
       author='',
       author_email='',
-      url='http://svn.plone.org/svn/collective/',
+      url='https://github.com/ggozad/jarn.xmpp.twisted',
       license='GPL',
-      packages=find_packages(exclude=['ez_setup']),
-      namespace_packages=['plone', 'plone.messaging'],
+      packages=find_packages(),
+      namespace_packages=['jarn', 'jarn.xmpp'],
       include_package_data=True,
       zip_safe=False,
       install_requires=[
           'setuptools',
-          'twisted',
+          'Twisted',
           'wokkel'
-          # -*- Extra requirements: -*-
       ],
       extras_require = {
           'test': [

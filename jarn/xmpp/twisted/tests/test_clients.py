@@ -1,15 +1,13 @@
 import unittest2 as unittest
 
-#from twisted.internet import reactor
-#from twisted.trial import unittest
 from twisted.words.protocols.jabber.jid import JID
 from twisted.words.protocols.jabber.xmlstream import IQ
 
-from plone.messaging.twisted.client import DeferredXMPPClient
-from plone.messaging.twisted.client import XMPPClient
-from plone.messaging.twisted.testing import REACTOR_INTEGRATION_TESTING
-from plone.messaging.twisted.testing import wait_on_deferred
-from plone.messaging.twisted.testing import wait_for_client_state
+from jarn.xmpp.twisted.client import DeferredXMPPClient
+from jarn.xmpp.twisted.client import XMPPClient
+from jarn.xmpp.twisted.testing import REACTOR_INTEGRATION_TESTING
+from jarn.xmpp.twisted.testing import wait_on_deferred
+from jarn.xmpp.twisted.testing import wait_for_client_state
 
 NS_VERSION = 'jabber:iq:version'
 

@@ -2,8 +2,8 @@ from twisted.trial import unittest
 from twisted.words.protocols.jabber.jid import JID
 from wokkel.test.helpers import XmlStreamStub
 
-from plone.messaging.twisted import protocols
-from plone.messaging.twisted.testing import FactoryWithJID
+from jarn.xmpp.twisted import protocols
+from jarn.xmpp.twisted.testing import FactoryWithJID
 
 
 class ChatCommandsProtocolTest(unittest.TestCase):

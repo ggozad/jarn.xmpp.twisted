@@ -1,6 +1,6 @@
 <configure
     xmlns="http://namespaces.zope.org/zope"
-    i18n_domain="plone.messaging.twisted">
+    i18n_domain="jarn.xmpp.twisted">
 
   <utility factory=".reactor.ZopeReactor" />
 

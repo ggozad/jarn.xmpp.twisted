@@ -7,10 +7,10 @@ from zope.component import getUtility
 from wokkel import client
 from wokkel.subprotocols import StreamManager
 
-from plone.messaging.twisted.interfaces import IDeferredXMPPClient
-from plone.messaging.twisted.interfaces import IZopeReactor
+from jarn.xmpp.twisted.interfaces import IDeferredXMPPClient
+from jarn.xmpp.twisted.interfaces import IZopeReactor
 
-logger = logging.getLogger('plone.messaging.twisted')
+logger = logging.getLogger('jarn.xmpp.twisted')
 
 
 def randomResource():

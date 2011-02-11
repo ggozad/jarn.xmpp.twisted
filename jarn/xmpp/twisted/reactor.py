@@ -1,13 +1,13 @@
 import logging
 import threading
 
-from plone.messaging.twisted.interfaces import IZopeReactor
-from plone.messaging.twisted.interfaces import ReactorStarted, ReactorStoped
+from jarn.xmpp.twisted.interfaces import IZopeReactor
+from jarn.xmpp.twisted.interfaces import ReactorStarted, ReactorStoped
 import  twisted.internet.selectreactor
 from zope.event import notify
 from zope.interface import implements
 
-logger = logging.getLogger('plone.messaging.twisted')
+logger = logging.getLogger('jarn.xmpp.twisted')
 
 
 class ZopeReactor(object):
