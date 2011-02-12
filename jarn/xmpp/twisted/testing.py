@@ -23,8 +23,12 @@ def wait_on_deferred(d, seconds=10):
 
 
 def wait_on_client_deferreds(client, seconds=10):
-    while client.xmlstream.iqDeferreds:
+    for i in range(seconds*10):
+        if not client.xmlstream.iqDeferreds:
+            return True
         time.sleep(0.1)
+    else:
+        assert False, 'Client deferreds never completed'
 
 
 def wait_for_client_state(client, state, seconds=10):
