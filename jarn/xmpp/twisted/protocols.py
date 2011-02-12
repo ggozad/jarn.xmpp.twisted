@@ -5,16 +5,17 @@ import logging
 from twisted.words.xish.domish import Element
 from twisted.words.protocols.jabber.jid import JID
 from twisted.words.protocols.jabber.xmlstream import IQ
-from wokkel.pubsub import PubSubClient as WokkelPubSubClient
-from wokkel.subprotocols import XMPPHandler
 from wokkel import data_form
 from wokkel.disco import NS_DISCO_INFO, NS_DISCO_ITEMS
+from wokkel.pubsub import PubSubClient as WokkelPubSubClient
+from wokkel.subprotocols import XMPPHandler
 from wokkel.pubsub import NS_PUBSUB_OWNER, NS_PUBSUB_NODE_CONFIG
 
 NS_CLIENT = 'jabber:client'
 NS_ROSTER_X = 'http://jabber.org/protocol/rosterx'
 NS_COMMANDS = 'http://jabber.org/protocol/commands'
 NODE_ADMIN = 'http://jabber.org/protocol/admin'
+NODE_ADMIN_GET_REGISTERED_USERS = NODE_ADMIN + '#get-registered-users-list'
 NODE_ADMIN_ADD_USER = NODE_ADMIN + '#add-user'
 NODE_ADMIN_DELETE_USER = NODE_ADMIN + '#delete-user'
 NODE_ADMIN_ANNOUNCE = NODE_ADMIN + '#announce'
@@ -89,6 +90,30 @@ class AdminHandler(XMPPHandler):
     Admin client.
     http://xmpp.org/extensions/xep-0133.html
     """
+
+    def getRegisteredUsers(self):
+        """ XXX: This is ejabberd specific. ejabberd does not implement
+        the #get-registered-users-list command, instead does it with an iq/get.
+        """
+
+        def resultReceived(result):
+            items = result.query.children
+            result = [item.attributes for item in items]
+            logger.info("Got registered users: %s" % result)
+            return result
+
+        def error(failure):
+            # TODO: Handle gracefully?
+            logger.error(failure.getTraceback())
+            return False
+
+        iq = IQ(self.xmlstream, 'get')
+        iq['to'] = self.xmlstream.factory.authenticator.jid.host
+        query = iq.addElement((NS_DISCO_ITEMS, 'query'))
+        query['node'] = 'all users'
+        d = iq.send()
+        d.addCallbacks(resultReceived, error)
+        return d
 
     def addUser(self, userjid, password):
         """Add a user.
@@ -234,6 +259,7 @@ class PubSubHandler(WokkelPubSubClient):
     """
 
     def publish(self, service, nodeIdentifier, items=[]):
+
         def cb(result):
             logger.info("Published to node %s." % nodeIdentifier)
             return True
@@ -254,6 +280,7 @@ class PubSubHandler(WokkelPubSubClient):
             self.parent.itemsReceived(event)
 
     def createNode(self, service, nodeIdentifier, options=None):
+
         def cb(result):
             logger.info("Created node %s." % nodeIdentifier)
             return True
@@ -262,13 +289,15 @@ class PubSubHandler(WokkelPubSubClient):
             # TODO: Handle gracefully?
             logger.error(failure.getTraceback())
             return False
-        d = super(PubSubHandler, self).createNode(service,
-                                                  nodeIdentifier=nodeIdentifier,
-                                                  options=options)
+        d = super(PubSubHandler, self).createNode(
+            service,
+            nodeIdentifier=nodeIdentifier,
+            options=options)
         d.addCallbacks(cb, error)
         return d
 
     def deleteNode(self, service, nodeIdentifier):
+
         def cb(result):
             logger.info("Deleted node %s." % nodeIdentifier)
             return True
@@ -360,7 +389,7 @@ class PubSubHandler(WokkelPubSubClient):
 
         def cb(result):
             result = result.query.identity['type']
-            logger.info("Got node type for %s: %s ." % (nodeIdentifier, result))
+            logger.info("Got node type %s: %s ." % (nodeIdentifier, result))
             return result
 
         def error(failure):
@@ -420,7 +449,7 @@ class PubSubHandler(WokkelPubSubClient):
                 except (AttributeError, IndexError):
                     pass
                 result[field['var']] = value
-            logger.info("Got node configuration for %s: %s ." % (nodeIdentifier, result))
+            logger.info("Got node config  %s: %s ." % (nodeIdentifier, result))
             return result
 
         def error(failure):
@@ -491,7 +520,8 @@ class PubSubHandler(WokkelPubSubClient):
             affiliations = result.pubsub.affiliations
             result = []
             for affiliate in affiliations.children:
-                result.append((JID(affiliate['jid']), affiliate['affiliation'], ))
+                result.append((JID(affiliate['jid']),
+                               affiliate['affiliation'], ))
             logger.info("Got affiliations for %s: %s ." % \
                 (nodeIdentifier, result))
             return result
