@@ -1,5 +1,8 @@
+import commands
+import os
 import time
 
+from plone.testing import Layer
 from plone.app.testing import IntegrationTesting, FunctionalTesting
 from plone.app.testing import PloneSandboxLayer
 from plone.app.testing import PLONE_FIXTURE
@@ -42,9 +45,45 @@ class FactoryWithJID(object):
     authenticator.jid = JID(u'user@example.com')
 
 
+class EJabberdLayer(Layer):
+
+    def setUp(self):
+        """Start ejabberd
+        Hopefully, the tests are run through the current buildout, which also
+        installs ejabberd...
+        """
+        if 'EJABBERDCTL' in os.environ:
+            self.ejabberdctl = os.environ['EJABBERDCTL']
+        else:
+            print """
+            You need to make available a running ejabberd server in order
+            to run the functional tests, as well as give the user with JID
+            admin@localhost and password 'admin' administrator privileges.
+            Make sure the environment variable EJABBERDCTL is set pointing to
+            the ejabberdctl command path. Aborting tests...
+            """
+            exit(1)
+
+        # Start ejabberd
+        start = "%s start" % self.ejabberdctl
+        out = commands.getoutput(start)
+        if out:
+            print "Problem starting ejabberd"
+            exit(1)
+        time.sleep(1.0)
+
+    def tearDown(self):
+        # Stop ejabberd
+        stop = "%s stop" % self.ejabberdctl
+        commands.getoutput(stop)
+
+
+EJABBERD_LAYER = EJabberdLayer()
+
+
 class ReactorFixture(PloneSandboxLayer):
 
-    defaultBases = (PLONE_FIXTURE, )
+    defaultBases = (EJABBERD_LAYER, PLONE_FIXTURE, )
 
     def setUpZope(self, app, configurationContext):
         import jarn.xmpp.twisted
