@@ -19,13 +19,19 @@ def wait_on_deferred(d, seconds=10):
         assert False, 'Deferred never completed.'
 
 
-def wait_for_client_state(c, state, seconds=10.0):
+def wait_on_client_deferreds(client, seconds=10):
+    while client.xmlstream.iqDeferreds:
+        time.sleep(0.1)
+
+
+def wait_for_client_state(client, state, seconds=10):
     for i in range(seconds*10):
-        if c.state == state:
+        if client.state == state:
             return True
         time.sleep(0.1)
     else:
-        assert False, 'Client never reached state.'
+        import pdb; pdb.set_trace( )
+        assert False, 'Client never reached state %s.' % state
 
 
 class FactoryWithJID(object):
