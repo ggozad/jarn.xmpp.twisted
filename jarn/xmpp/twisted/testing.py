@@ -30,7 +30,6 @@ def wait_for_client_state(client, state, seconds=10):
             return True
         time.sleep(0.1)
     else:
-        import pdb; pdb.set_trace( )
         assert False, 'Client never reached state %s.' % state
 
 
