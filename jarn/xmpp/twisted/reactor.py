@@ -35,10 +35,17 @@ class ZopeReactor(object):
         self.thread.start()
 
     def stop(self):
+        """This will stop the running reactor. NEVER call it, it's
+        only useful for tests.
+        """
         if not self.reactor.running:
             return
         self.reactor.callFromThread(self.reactor.stop)
         self.thread.join(3)
+        if self.thread.isAlive():
+            # Not dead yet? Well I guess you will have to!
+            self.reactor.callFromThread(self.reactor.crash)
+            self.thread.join(3)
         event = ReactorStoped(self.reactor)
         notify(event)
 

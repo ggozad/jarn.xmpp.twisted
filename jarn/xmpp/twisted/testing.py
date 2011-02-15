@@ -22,7 +22,7 @@ def wait_on_deferred(d, seconds=10):
         assert False, 'Deferred never completed.'
 
 
-def wait_on_client_deferreds(client, seconds=10):
+def wait_on_client_deferreds(client, seconds=15):
     for i in range(seconds*10):
         if not client.xmlstream.iqDeferreds:
             return True
@@ -38,6 +38,15 @@ def wait_for_client_state(client, state, seconds=10):
         time.sleep(0.1)
     else:
         assert False, 'Client never reached state %s.' % state
+
+
+def wait_for_reactor_state(reactor, state=True, seconds=20):
+    for i in range(seconds*10):
+        if reactor.running == state:
+            return True
+        time.sleep(0.1)
+    else:
+        assert False, 'Reactor never reached state %s.' % state
 
 
 class FactoryWithJID(object):
@@ -99,6 +108,7 @@ class ReactorFixture(PloneSandboxLayer):
     def testSetUp(self):
         zr = getUtility(IZopeReactor)
         zr.start()
+        wait_for_reactor_state(zr.reactor, state=True)
 
     def testTearDown(self):
         # Clean ZopeReactor
@@ -107,6 +117,7 @@ class ReactorFixture(PloneSandboxLayer):
             if not dc.cancelled:
                 dc.cancel()
         zr.stop()
+        wait_for_reactor_state(zr.reactor, state=False)
 
         #Clean normal reactor for the twisted unit tests.
         from twisted.internet import reactor
