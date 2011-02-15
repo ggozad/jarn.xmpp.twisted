@@ -90,6 +90,7 @@ class XMPPClient(StreamManager):
         self._connector = zr.reactor.connectTCP(self.host, self.port, self.factory)
 
     def disconnect(self):
+        self.xmlstream.sendFooter()
         self._connector.disconnect()
 
     @property
