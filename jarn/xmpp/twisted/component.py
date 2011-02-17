@@ -8,7 +8,7 @@ from jarn.xmpp.twisted.interfaces import IZopeReactor
 
 class XMPPComponent(StreamManager):
 
-    def __init__(self, host, port, domain, password):
+    def __init__(self, host, port, domain, password, extra_handlers=[]):
         self.host = host
         self.port = port
 
@@ -16,6 +16,8 @@ class XMPPComponent(StreamManager):
         factory = component.componentFactory(domain, password)
 
         StreamManager.__init__(self, factory)
+        for handler in extra_handlers:
+            handler.setHandlerParent(self)
 
         self._state = u'connecting'
         zr = getUtility(IZopeReactor)
