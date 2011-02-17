@@ -15,6 +15,7 @@ In short, ``plone.messaging.twisted`` includes:
 
 * A `Twisted`_ reactor that runs side-by-side with the Zope instance.
 * Utilities that provide XMPP clients of two sorts, a *deferred* client that initially connects, executes a task and disconnects as soon as it is done, as well as a normal client that remains connected and can respond to XMPP events.
+* An XMPP component base class for writing custom components.
 
 .. _Twisted: http://twistedmatrix.com
 .. _wokkel: http://wokkel.ik.nu
