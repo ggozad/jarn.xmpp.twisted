@@ -81,13 +81,15 @@ class XMPPClient(StreamManager):
         for handler in extra_handlers:
             handler.setHandlerParent(self)
 
+        self._state = u'connecting'
         zr = getUtility(IZopeReactor)
         zr.reactor.callFromThread(self.connect)
-        self._state = u'connecting'
 
     def connect(self):
         zr = getUtility(IZopeReactor)
-        self._connector = zr.reactor.connectTCP(self.host, self.port, self.factory)
+        self._connector = zr.reactor.connectTCP(self.host,
+                                                self.port,
+                                                self.factory)
 
     def disconnect(self):
         self.xmlstream.sendFooter()
