@@ -1,6 +1,5 @@
-import commands
-import os
 import time
+import urllib2
 
 from plone.testing import Layer
 from plone.app.testing import IntegrationTesting, FunctionalTesting
@@ -61,34 +60,24 @@ class FactoryWithJID(object):
 class EJabberdLayer(Layer):
 
     def setUp(self):
-        """Start ejabberd
-        Hopefully, the tests are run through the current buildout, which also
-        installs ejabberd...
-        """
-        if 'EJABBERDCTL' in os.environ:
-            self.ejabberdctl = os.environ['EJABBERDCTL']
-        else:
+        # What follows is making sure we have ejabberd running and an
+        # administrator account with JID admin@localhost and password 'admin'
+        pm = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        url = 'http://localhost:5280/admin/'
+        pm.add_password('ejabberd', url, 'admin@localhost', 'admin')
+        handler = urllib2.HTTPBasicAuthHandler(pm)
+        opener = urllib2.build_opener(handler)
+        try:
+            urllib2.install_opener(opener)
+            urllib2.urlopen(url)
+        except urllib2.URLError:
             print """
             You need to make available a running ejabberd server in order
             to run the functional tests, as well as give the user with JID
             admin@localhost and password 'admin' administrator privileges.
-            Make sure the environment variable EJABBERDCTL is set pointing to
-            the ejabberdctl command path. Aborting tests...
+            Aborting tests...
             """
             exit(1)
-
-        # Start ejabberd
-        start = "%s start" % self.ejabberdctl
-        out = commands.getoutput(start)
-        if out:
-            print "Problem starting ejabberd"
-            exit(1)
-        time.sleep(1.0)
-
-    def tearDown(self):
-        # Stop ejabberd
-        stop = "%s stop" % self.ejabberdctl
-        commands.getoutput(stop)
 
 
 EJABBERD_LAYER = EJabberdLayer()
