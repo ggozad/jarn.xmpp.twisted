@@ -1,9 +1,9 @@
 Introduction
 ============
 
-``plone.messaging.twisted`` provides a basis for building XMPP applications with Plone.
+``jarn.xmpp.twisted`` provides a basis for building XMPP applications with Plone.
 
-In short, ``plone.messaging.twisted`` includes:
+In short, ``jarn.xmpp.twisted`` includes:
 
 * Extensions to the `wokkel`_ package by implementing parts of the following XMPP extensions:
 
@@ -16,6 +16,10 @@ In short, ``plone.messaging.twisted`` includes:
 * A `Twisted`_ reactor that runs side-by-side with the Zope instance.
 * Utilities that provide XMPP clients of two sorts, a *deferred* client that initially connects, executes a task and disconnects as soon as it is done, as well as a normal client that remains connected and can respond to XMPP events.
 * An XMPP component base class for writing custom components.
+
+Installation
+------------
+``jarn.xmpp.twisted`` requires a working XMPP server installation. Please see ``jarn.xmpp.buildout`` instructions on how to setup ejabberd for use with it.
 
 .. _Twisted: http://twistedmatrix.com
 .. _wokkel: http://wokkel.ik.nu
