@@ -1,9 +1,14 @@
 Introduction
 ============
 
-``plone.messaging.twisted`` provides a basis for building XMPP applications with Plone.
+``jarn.xmpp.twisted`` provides a basis for building XMPP applications with Plone.
 
-In short, ``plone.messaging.twisted`` includes:
+It is part of a suite, with the other packages being:
+
+* `jarn.xmpp.core`_, provides facilities for presence, messaging, chatting and microblogging.
+* `jarn.xmpp.collaboration`_ provides an XMPP protocol to do real-time collaborative editing as well as a Plone-targeted implementation.
+
+In short, ``jarn.xmpp.twisted`` includes:
 
 * Extensions to the `wokkel`_ package by implementing parts of the following XMPP extensions:
 
@@ -17,6 +22,16 @@ In short, ``plone.messaging.twisted`` includes:
 * Utilities that provide XMPP clients of two sorts, a *deferred* client that initially connects, executes a task and disconnects as soon as it is done, as well as a normal client that remains connected and can respond to XMPP events.
 * An XMPP component base class for writing custom components.
 
+Installation
+============
+
+``jarn.xmpp.twisted`` requires a working XMPP server installation. Please refer to the `jarn.xmpp.core`_ documentation on how to set it up.
+
+Credits
+=======
+
+* Most of this work was done using the 10% time available to `Jarn AS`_ employees for the development of open-source projects.
+
 .. _Twisted: http://twistedmatrix.com
 .. _wokkel: http://wokkel.ik.nu
 .. _XEP-0071: http://xmpp.org/extensions/xep-0071.html
@@ -24,3 +39,6 @@ In short, ``plone.messaging.twisted`` includes:
 .. _XEP-0060: http://xmpp.org/extensions/xep-0060.html
 .. _XEP-0248: http://xmpp.org/extensions/xep-0248.html
 .. _XEP-0133: http://xmpp.org/extensions/xep-0133.html
+.. _Jarn AS: http://jarn.com
+.. _jarn.xmpp.core: http://pypi.python.org/pypi/jarn.xmpp.core
+.. _jarn.xmpp.collaboration: http://pypi.python.org/pypi/jarn.xmpp.collaboration
