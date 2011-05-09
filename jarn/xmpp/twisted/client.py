@@ -100,8 +100,8 @@ class XMPPClient(StreamManager):
         return self._state
 
     def _authd(self, xs):
-        #Save the JID that we were assigned by the server, as the resource might
-        #differ from the JID we asked for.
+        #Save the JID that we were assigned by the server, as the resource
+        # might differ from the JID we asked for.
         self.jid = self.factory.authenticator.jid
         StreamManager._authd(self, xs)
         self._state = u'authenticated'
