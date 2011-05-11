@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.1a2 - 2010-05-11
+
+- Made a release of wokkel at http://dist.jarn.com/public, until
+  wokkel > 0.6.4 is released.
+  [ggozad]
+
 0.1a1 - 2010-05-09
 -------------------
 
