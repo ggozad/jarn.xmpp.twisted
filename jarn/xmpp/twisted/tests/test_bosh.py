@@ -10,6 +10,7 @@ from jarn.xmpp.twisted.testing import REACTOR_INTEGRATION_TESTING
 class ClientNetworkTest(unittest.TestCase):
 
     layer = REACTOR_INTEGRATION_TESTING
+    level = 2
 
     def test_bosh_authentication(self):
         jid = JID('admin@localhost')

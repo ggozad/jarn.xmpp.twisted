@@ -15,6 +15,7 @@ NS_VERSION = 'jabber:iq:version'
 class ClientNetworkTest(unittest.TestCase):
 
     layer = REACTOR_INTEGRATION_TESTING
+    level = 2
 
     def test_deferred_client(self):
 

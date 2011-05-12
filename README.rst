@@ -28,6 +28,15 @@ Installation
 
 ``jarn.xmpp.twisted`` requires a working XMPP server installation. Please refer to the `jarn.xmpp.core`_ documentation on how to set it up.
 
+Testing
+=======
+
+Some of the included tests are functional tests that require a XMPP server running on ``localhost`` as well as an administrator account setup up on this server with JID ``admin@localhost`` and password ``admin``. If you wish to run those you have to specify a *level* 2 on your testrunner, i.e.
+
+    ::
+
+    ./bin/test -a 2 -s jarn.xmpp.twisted
+
 Credits
 =======
 
