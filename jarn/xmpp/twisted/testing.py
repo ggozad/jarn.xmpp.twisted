@@ -83,14 +83,29 @@ class EJabberdLayer(Layer):
 EJABBERD_LAYER = EJabberdLayer()
 
 
-class ReactorFixture(PloneSandboxLayer):
+class NoReactorFixture(PloneSandboxLayer):
 
-    defaultBases = (EJABBERD_LAYER, PLONE_FIXTURE, )
+    defaultBases = (PLONE_FIXTURE, )
 
     def setUpZope(self, app, configurationContext):
         import jarn.xmpp.twisted
         xmlconfig.file('configure.zcml', jarn.xmpp.twisted,
                        context=configurationContext)
+
+NO_REACTOR_FIXTURE = NoReactorFixture()
+
+NO_REACTOR_INTEGRATION_TESTING = IntegrationTesting(
+  bases=(NO_REACTOR_FIXTURE, ), name="NoReactorFixture:Integration")
+NO_REACTOR_FUNCTIONAL_TESTING = FunctionalTesting(
+  bases=(NO_REACTOR_FIXTURE, ), name="NoReactorFixture:Functional")
+
+
+class ReactorFixture(PloneSandboxLayer):
+
+    defaultBases = (EJABBERD_LAYER, NO_REACTOR_FIXTURE, )
+
+    def setUpZope(self, app, configurationContext):
+        import jarn.xmpp.twisted
         xmlconfig.file('reactor.zcml', jarn.xmpp.twisted,
                       context=configurationContext)
 
