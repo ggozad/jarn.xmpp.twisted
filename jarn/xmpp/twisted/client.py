@@ -23,7 +23,7 @@ class DeferredXMPPClient(object):
 
     implements(IDeferredXMPPClient)
 
-    def execute(self, jid, password,
+    def execute(self, jid, password, host,
                 callback, extra_handlers=[], errback=None):
 
         jid.resource=randomResource()
@@ -53,7 +53,7 @@ class DeferredXMPPClient(object):
 
         zr = getUtility(IZopeReactor)
         zr.reactor.callFromThread(zr.reactor.connectTCP,
-                                  "localhost", 5222, factory)
+                                  host, 5222, factory)
         return d
 
 

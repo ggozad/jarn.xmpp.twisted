@@ -8,6 +8,9 @@ Changelog
   testrunner.
   [ggozad]
 
+- Fix deferred client to work with remote server.
+  [ggozad]
+
 0.1a2 - 2010-05-11
 
 - Made a release of wokkel at http://dist.jarn.com/public, until

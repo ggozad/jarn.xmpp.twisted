@@ -26,7 +26,7 @@ class ClientNetworkTest(unittest.TestCase):
             return d
 
         client = DeferredXMPPClient()
-        d = client.execute(JID('admin@localhost'), 'admin', getVersion)
+        d = client.execute(JID('admin@localhost'), 'admin', 'localhost', getVersion)
         self.assertTrue(wait_on_deferred(d))
         self.assertEqual(d.result['type'], 'result')
 
