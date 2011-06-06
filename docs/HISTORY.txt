@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.1a3 - Unreleased
+0.1a3 - 2010-06-06
 ------------------
 
 - Run tests requiring the EJABBERD layer only when level 2 is specified on the
