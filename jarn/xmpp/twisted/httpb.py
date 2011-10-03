@@ -41,7 +41,10 @@ class BOSHClient(object):
         return body
 
     def sendRequest(self, body):
-        conn = httplib.HTTPConnection(self.bosh_service.netloc)
+        if self.bosh_service.scheme == 'http':
+            conn = httplib.HTTPConnection(self.bosh_service.netloc)
+        else:
+            conn = httplib.HTTPSConnection(self.bosh_service.netloc)
 
         try:
             conn.request("POST",

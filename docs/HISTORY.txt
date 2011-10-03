@@ -1,8 +1,11 @@
 Changelog
 =========
 
-0.1a4
+0.1b1
 -----
+
+- Allow HTTPS connections for http-binding.
+  [hannosch]
 
 0.1a3 - 2010-06-06
 ------------------
