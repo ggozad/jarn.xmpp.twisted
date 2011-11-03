@@ -57,5 +57,4 @@ class ZopeReactor(object):
             self.reactor.callLater(self.poll_interval, self.reactorPoll)
 
     def reactorPoll(self):
-        #logger.info("Twisted poll")
         self.reactor.callLater(self.poll_interval, self.reactorPoll)
