@@ -1,3 +1,4 @@
+import atexit
 import logging
 import threading
 
@@ -30,6 +31,7 @@ class ZopeReactor(object):
             self.reactor.callWhenRunning(self.reactorStarted)
             self.reactor.run(installSignalHandlers=0)
 
+        atexit.register(self.stop)
         self.thread = threading.Thread(target=run_reactor)
         self.thread.setDaemon(True)
         self.thread.start()

@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.1
+---
+
+- Stop reactor on system exit.
+  [hannosch, ggozad]
+
 0.1b1
 -----
 
